@@ -1,40 +1,45 @@
 <script lang="ts">
 	import type { Call } from '$lib/types';
+	import Audio from '$lib/components/Audio.svelte';
+	import { Peer } from 'peerjs';
+	import type { Peer as _Peer } from '$lib/types';
 
-    export let call: Call
+	export let call: Call;
 
-    import { onMount } from 'svelte'
+	import { onMount } from 'svelte';
 
-    let self = ""
-    let peer = new Peer();
+	let localStream: any;
+	let remotes: _Peer[] = [];
 
-    onMount(()=> {
-        join(self)
-    })
+	let peer = new Peer();
 
-    let getUserMedia = navigator.getUserMedia;
-
-    peer.on('call', (_call) => {
-        getUserMedia({audio: true}, (_stream) => {
-            _call.answer(stream);
-            _call.on('stream', (remoteStream) => {
-                
-            })
-        })
-    })
-
-    const join = (id: string) => {
-        getUserMedia({audio: true}, () => {
-            for (let id of call.ids) {
-            let call = peer.call(id, stream);
-            call.on('stream', (remoteStream) => {
-
-            })
-        }
-        })
+    const resolve = (c) => {
+        c.on('stream', (stream) => {
+			let r = remotes.find((r) => r.peer === c.peer);
+			if (r) {
+				r.stream = stream;
+			} else {
+				remotes.push({ stream, peer: c.peer, ref: undefined });
+			}
+		});
     }
 
-    for (let id of call.ids) {
-        join(id)
-    }
+	onMount(() => {
+		navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then((stream) => {
+			localStream = stream;
+		});
+		call.ids.forEach((id) => {
+			let c = peer.call(id, localStream);
+			resolve(c)
+		});
+	});
+
+	peer.on('call', (c) => {
+		c.answer(localStream);
+		resolve(c)
+	});
 </script>
+
+{#each remotes as r}
+	<Audio bind:r />
+{/each}

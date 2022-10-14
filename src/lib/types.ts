@@ -3,3 +3,9 @@ export interface Call {
     name: string,
     ids: string[]
 }
+
+export interface Peer {
+    stream: MediaStream,
+    ref: any | undefined,
+    peer: string
+}

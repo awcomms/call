@@ -35,6 +35,7 @@
 	"type": "module",
 	"dependencies": {
 		"carbon-components-svelte": "^0.70.12",
-		"carbon-icons-svelte": "^11.3.0"
+		"carbon-icons-svelte": "^11.3.0",
+		"peerjs": "^1.4.7"
 	}
 }
