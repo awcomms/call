@@ -106,14 +106,6 @@ impl User {
         }
     }
 
-    /*
-       *rust email
-       ResetPasswordAction(username),
-           send_password_reset_email(username){
-               send_email(get_by_username(username).email, *"click this link... : env::("domain")/reset_password?token=token_with_username()")
-           }
-    */
-
     fn send_password_reset_email(username: &str) -> SendResult<String> {
         User::get_by_username(&username)?;
         Self::send_email(
@@ -132,7 +124,7 @@ impl User {
     }
 
     fn send_email(email: &str, content: &str) -> SendResult<String> {
-        Ok(String::new()) //TODO
+        todo!();
     }
 
     fn get_by_username(username: &str) -> SendResult<Self> {

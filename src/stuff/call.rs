@@ -7,6 +7,7 @@ use crate::{util::Location, crud::{Crud, Auth}, tag::{Tags, DbTags}, handler::Se
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Call {
     id: u64,
+    name: Option<String>,
     location: Option<Location>,
     tags: Tags,
     ids: HashSet<String>
@@ -20,6 +21,7 @@ pub struct SearchOptions {
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct SetOptions {
+    name: Option<String>,
     tags: Option<Vec<String>>,
     location: Option<Location>,
     add_ids: Option<Vec<String>>,
@@ -31,7 +33,7 @@ crate::dbapi!(Call);
 
 impl DbTags for Call {
     fn tags(&self) -> Tags {
-        self.tags()
+        self.tags.clone()
     }
 }
 
@@ -46,6 +48,7 @@ impl Crud for Call {
     fn new(options: SetOptions) -> SendResult<Self> {
         let mut call = Call {
             id: new_id()?,
+            name: options.name,
             location: options.location,
             tags: Tags::new(),
             ids: HashSet::new()

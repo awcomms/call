@@ -80,8 +80,7 @@ pub async fn health_handler() -> Result<impl Reply> {
 }
 
 pub async fn ws_handler(ws: warp::ws::Ws /*, clients: Clients*/) -> Result<impl Reply> {
-    // let id = Uuid::new_v4().simple().to_string();
-    let id = String::new();
+    let id = Uuid::new_v4().simple().to_string();
     Ok(ws.on_upgrade(move |socket| client_connection(socket, id /*clients*/)))
 }
 
