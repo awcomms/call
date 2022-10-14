@@ -2,7 +2,7 @@ use crate::{db::DbItem, handler::SendResult};
 
 pub trait Auth: Crud {
     fn new(token: Option<String>, options: Self::SetOptions) -> SendResult<Self> {
-        <Self as Crud>::new(options)
+        Crud::set(&mut <Self as Crud>::new()?, options)
     }
 
     fn set(token: Option<String>, id: u64, options: Self::SetOptions) -> SendResult<Self> {
@@ -34,7 +34,7 @@ pub trait Crud: DbItem {
     type SetOptions;
     type SearchOptions;
 
-    fn new(options: Self::SetOptions) -> SendResult<Self>;
+    fn new() -> SendResult<Self>;
 
     fn set(&mut self, options: Self::SetOptions) -> SendResult<Self>;
 

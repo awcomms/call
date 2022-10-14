@@ -45,23 +45,14 @@ impl Crud for Call {
     type SetOptions = SetOptions;
     type SearchOptions = SearchOptions;
 
-    fn new(options: SetOptions) -> SendResult<Self> {
-        let mut call = Call {
+    fn new() -> SendResult<Self> {
+        Call {
             id: new_id()?,
-            name: options.name,
-            location: options.location,
+            name: Default::default(),
+            location: Default::default(),
             tags: Tags::new(),
             ids: HashSet::new()
-        };
-        if let Some(tags) = options.tags {
-            call.tags.set(&tags);
-        }
-        if let Some(add_ids) = options.add_ids {
-            for id in add_ids{
-                call.ids.insert(id);
-            }
-        }
-        call.save()
+        }.save()
     }
 
     fn set(&mut self, options: SetOptions) -> SendResult<Self> {
