@@ -13,6 +13,8 @@
   import type { _Tag } from "$lib/components/Tag"
   import Tag from "$lib/components/Tag/Tag.svelte";
   import Add from "carbon-icons-svelte/lib/Add.svelte";
+  import CaretDown from "carbon-icons-svelte/lib/CaretDown.svelte";
+  import CaretUp from "carbon-icons-svelte/lib/CaretUp.svelte";
   import { onMount, createEventDispatcher } from "svelte";
   import {
     Button,
@@ -81,6 +83,11 @@
 
 <div class="head">
   <p class="title" on:click={toggleOpen}>
+    {#if open}
+      <CaretUp />
+    {:else}
+      <CaretDown />
+    {/if}
     {tags.length}
     {`${tags.length === 1 ? `${prefix}tag` : `${prefix}tags`}`}
   </p>
@@ -147,5 +154,7 @@
 
   .title {
     width: max-content;
+    display: flex;
+    align-items: center;
   }
 </style>

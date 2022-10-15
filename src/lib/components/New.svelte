@@ -28,5 +28,6 @@
 <Modal bind:open passiveModal modalHeading="New">
     <TextInput labelText="name" bind:value={name} />
     <Tags bind:tags />
+    <br />
     <Button on:click={send}>Create</Button>
 </Modal>
