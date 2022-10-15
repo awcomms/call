@@ -33,7 +33,11 @@ crate::dbapi!(Call);
 
 impl DbTags for Call {
     fn tags(&self) -> Tags {
-        self.tags.clone()
+        let mut tags = self.tags.clone();
+        if let Some(name) = self.name.clone() {
+            tags.update(vec![name])
+        }
+        tags
     }
 }
 
@@ -56,7 +60,9 @@ impl Crud for Call {
     }
 
     fn set(&mut self, options: SetOptions) -> SendResult<Self> {
-        print!("options: {:#?}", &options);
+        if let Some(tags) = options.tags {
+            self.tags.update(tags);
+        }
         if let Some(name) = options.name {
             self.name = Some(name);
         }
@@ -73,6 +79,7 @@ impl Crud for Call {
 
     fn search(options: SearchOptions) -> SendResult<Vec<Self>> {
         if let Some(tags) = options.tags {
+            println!("tags");
             <Self as DbTags>::sort(&tags)
         } else {
             <Self as DbItem>::all()
