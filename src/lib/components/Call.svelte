@@ -2,6 +2,7 @@
 	import type { _Call } from '$lib/types';
 	import Audio from '$lib/components/Audio.svelte';
 	import type { _Remote } from '$lib/types';
+	import { PEER_SERVER } from '$lib/env';
 	import type { MediaConnection, Peer as _Peer } from 'peerjs';
 	import { peer } from "$lib/store"
 
@@ -65,7 +66,7 @@
 					console.log(id);
 					return;
 				}
-				$peer = new peerjs.Peer(id, { host: '127.0.0.1' });
+				$peer = new peerjs.Peer(id, { host: PEER_SERVER });
 				$peer.on('call', (c) => {
 					c.answer(localStream);
 					resolve(c);
