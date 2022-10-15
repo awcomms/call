@@ -1,5 +1,5 @@
 import { browser } from "$app/environment";
-import { req } from "$lib/util";
+import { req } from "$lib/req";
 import { writable, derived } from 'svelte/store';
 
 export const booleanStore = (key = '', initialValue = false) => {

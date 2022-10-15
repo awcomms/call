@@ -8,8 +8,9 @@
   export let useOptions = false;
   export let hidable = false;
   export let open = false;
-  export let tags = [];
+  export let tags:_Tag[] = [];
 
+  import type { _Tag } from "$lib/components/Tag"
   import Tag from "$lib/components/Tag/Tag.svelte";
   import Add from "carbon-icons-svelte/lib/Add.svelte";
   import { onMount, createEventDispatcher } from "svelte";

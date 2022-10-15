@@ -9,7 +9,7 @@
 		InlineLoading
 	} from 'carbon-components-svelte';
 	import Input from '$lib/components/Input/Input.svelte';
-	import { req } from '$lib/util';
+	import { req } from '$lib/req';
 	import { newUser, token, loginOpen } from '$lib/store';
 
 	$: if ($newUser) {

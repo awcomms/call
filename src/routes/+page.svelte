@@ -1,28 +1,40 @@
 <script lang="ts">
-	import { req } from '$lib/util/req';
-	import { Row, Column, Link, Button } from 'carbon-components-svelte';
-	import New from '$lib/components/New.svelte';
+	import { req } from '$lib/req';
+	import { Row, Column, ButtonSet, Button } from 'carbon-components-svelte';
+	import { New, Call } from '$lib/components';
 	import { Tags } from '$lib/components/Tag';
 	import type { _Tag } from '$lib/components/Tag';
-	import type { Call } from '$lib/types';
+	import type { _Call } from '$lib/types';
 
 	let tags: _Tag[] = [];
-	let calls: Call[] = [];
+	let calls: _Call[] = [];
 	let open = false;
+	let current: _Call;
 
-	const search = async() => {
+	const search = async () => {
 		calls = await req({ Call: { Search: { options: { tags: tags.map((t) => t.value) } } } });
 	};
 </script>
 
-<Tags bind:tags />
-<New bind:open />
+<Tags on:change={search} bind:tags />
+<New bind:open on:add={({ detail }) => (current = detail)} />
+<Call bind:call={current} />
 
 <Row>
 	<Column>
+		{#if current}
+			<p>current call: {current.id}</p>
+		{/if}
 		<Button size="small" on:click={() => (open = true)}>New</Button>
-		{#each calls as call}
-			<Link href="/call/{call.id}">{call.name}</Link>
-		{/each}
+	</Column>
+</Row>
+
+<Row>
+	<Column>
+		<ButtonSet stacked>
+			{#each calls as call}
+				<Button kind="ghost" on:click={() => (current = call)}>{call.id}</Button>
+			{/each}
+		</ButtonSet>
 	</Column>
 </Row>
