@@ -123,7 +123,7 @@ impl User {
         )
     }
 
-    fn send_email(email: &str, content: &str) -> SendResult<String> {
+    fn send_email(_email: &str, _content: &str) -> SendResult<String> {
         todo!();
     }
 

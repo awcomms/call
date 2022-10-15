@@ -1,6 +1,13 @@
-use crate::handler::SendResult;
+use self::handler::SendResult;
 use serde::{Serialize, Deserialize};
 use std::{collections::BTreeMap};
+
+pub mod handler;
+pub mod crud;
+pub mod link;
+pub mod msg;
+pub mod tag;
+pub mod db;
 
 pub fn get_from_claims(claims: BTreeMap<String, String>, key: &str) -> SendResult<String> {
     match claims.get(key) {

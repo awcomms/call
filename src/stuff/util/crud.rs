@@ -36,9 +36,13 @@ pub trait Crud: DbItem {
 
     fn new() -> SendResult<Self>;
 
-    fn set(&mut self, options: Self::SetOptions) -> SendResult<Self>;
+    fn set(&mut self, options: Self::SetOptions) -> SendResult<Self> {
+        Ok(self.clone())
+    }
 
-    fn search(options: Self::SearchOptions) -> SendResult<Vec<Self>>;
+    fn search(options: Self::SearchOptions) -> SendResult<Vec<Self>> {
+        <Self as DbItem>::all()
+    }
 }
 
 #[macro_export]

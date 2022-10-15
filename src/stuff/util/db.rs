@@ -5,7 +5,6 @@ use sled;
 use std::fmt::Debug;
 use std::str;
 
-
 #[macro_export]
 macro_rules! dbitem {
     ($name:ident) => {

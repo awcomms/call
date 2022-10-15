@@ -10,7 +10,7 @@ extern crate serde_json;
 #[tokio::main]
 async fn main() {
     env_logger::init();
-    let clients: Clients = Arc::new(RwLock::new(HashMap::new()));
+    let _clients: Clients = Arc::new(RwLock::new(HashMap::new()));
 
     let health_route = warp::path!("health").and_then(handler::health_handler);
     let ws_route = warp::path("ws")

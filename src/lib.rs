@@ -1,12 +1,15 @@
+use lazy_static::lazy_static;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::{mpsc, RwLock};
 use warp::{ws::Message, Rejection};
-use lazy_static::lazy_static;
 
 pub mod stuff;
 
-pub use stuff::{handler, db, msg, util, tag, user, crud, call};
+pub use stuff::{
+    call, user, user_call, util,
+    util::{crud, db, handler, msg, tag},
+};
 
 pub type Result<T> = std::result::Result<T, Rejection>;
 pub type Clients = Arc<RwLock<HashMap<String, Client>>>;
@@ -20,5 +23,5 @@ lazy_static! {
 #[derive(Debug, Clone)]
 pub struct Client {
     pub id: String,
-    pub sender: Option<mpsc::UnboundedSender<std::result::Result<Message, warp::Error>>>
+    pub sender: Option<mpsc::UnboundedSender<std::result::Result<Message, warp::Error>>>,
 }
