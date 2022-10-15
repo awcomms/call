@@ -121,7 +121,7 @@ pub async fn client_connection(socket: WebSocket, id: String /*, clients: Client
                                 let msg_id = &request.id;
                                 if let Some(model) = request.model {
                                     match model {
-                                        Model::Id => send_base(&sender, &id),
+                                        Model::Id => send(msg_id, &sender, &id),
                                         Model::User(action) => User::act(msg_id, &sender, action),
                                         Model::Call(action) => Call::act(msg_id, &sender, action),
                                     }

@@ -184,16 +184,10 @@ pub trait DbItem: Debug + Clone + Sized + From<sled::IVec> + Into<sled::IVec> {
     }
 
     fn drop_all() -> SendResult<()> {
-        if let Ok(tree) = Self::tree() {
-            if let Err(e) = tree.clear() {
-                error!("DbItem::drop_all error on {}: {}", Self::NAME, e);
-                Err(None)
-            } else {
-                Ok(())
-            }
-        } else {
-            Err(None)
+        for i in Self::all()? {
+            i.drop()?
         }
+        Ok(())
     }
 
     fn save(&self) -> SendResult<Self> {

@@ -10,7 +10,7 @@ pub struct Call {
     name: Option<String>,
     location: Option<Location>,
     tags: Tags,
-    ids: HashSet<String>
+    pub ids: HashSet<String>
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
