@@ -1,6 +1,7 @@
 import { browser } from "$app/environment";
 import { req } from "$lib/req";
 import { writable, derived } from 'svelte/store';
+import type { Peer } from 'peerjs';
 
 export const booleanStore = (key = '', initialValue = false) => {
 	let previousValue: boolean
@@ -90,6 +91,8 @@ export const users = arrayStore("users", []);
 export const userTags = arrayStore("userTags", []);
 export const isSideNavOpen = booleanStore("isSideNavOpen");
 export const token = stringStore("token");
+
+export const peer = writable<Peer>(undefined);
 
 export const user = derived(token, ($token, set) => {
 	req({User: {Auth: $token}}).then((r) => {

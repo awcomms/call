@@ -26,7 +26,6 @@ const getWS = () => {
 socket.onmessage = ({ data }: { data: string }) => {
 	try {
 		const res: Res = JSON.parse(data);
-		console.log(res.id)
 		const resolve = reqs.get(res.id);
 		if (!resolve) {
 			console.error(`response with unmatched id: ${JSON.stringify(res)}`);
@@ -44,12 +43,11 @@ socket.onmessage = ({ data }: { data: string }) => {
 };
 
 socket.onerror = (e) => {
-	console.log(e)
+	console.log('socket error', e)
 }
 
 export const req = async (data: any, auth = false) => {
 	const id = uuidv4();
-	console.log(id);
 	let model = data;
 	if (typeof model !== "string") {
 		if (auth) model[Object.keys(model)[0]].token = get(token);

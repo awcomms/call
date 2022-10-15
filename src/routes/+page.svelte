@@ -39,7 +39,7 @@
 					on:click={() => {
 						if (current) leave_id = current.id;
 						current = call;
-					}}>{call.id}</Button
+					}}>{call.id} {call.name}</Button
 				>
 			{/each}
 		</ButtonSet>

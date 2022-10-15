@@ -1,14 +1,13 @@
-<script lang='ts'>
-    import type {_Remote } from "$lib/types"
-    export let r: _Remote
+<script lang="ts">
+	import type { _Remote } from '$lib/types';
+	export let r: _Remote;
 
-    let ref;
-    $: if (ref) ref.srcObject = r?.stream
+	let ref;
+	$: if (ref) ref.srcObject = r?.stream;
 </script>
 
 {#if r?.stream}
-_str
-<audio class="audio" autoplay={true} bind:this={ref} />
+	<audio class="audio" autoplay={true} bind:this={ref} />
 {/if}
 <!-- <style lang="sass">
     .audio
