@@ -4,8 +4,7 @@ export interface _Call {
     ids: string[]
 }
 
-export interface _Peer {
+export interface _Remote {
     stream: MediaStream,
-    ref: any | undefined,
     peer: string
 }

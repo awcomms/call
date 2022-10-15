@@ -2,14 +2,14 @@
 	import type { Call } from '$lib/types';
 	import Audio from '$lib/components/Audio.svelte';
 	import { Peer } from 'peerjs';
-	import type { Peer as _Peer } from '$lib/types';
+	import type { Peer as _Remote } from '$lib/types';
 
 	export let call: Call;
 
 	import { onMount } from 'svelte';
 
 	let localStream: any;
-	let remotes: _Peer[] = [];
+	let remotes: _Remote[] = [];
 
 	let peer = new Peer();
 

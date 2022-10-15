@@ -10,6 +10,7 @@
 	let calls: _Call[] = [];
 	let open = false;
 	let current: _Call;
+	let leave_id: string;
 
 	const search = async () => {
 		calls = await req({ Call: { Search: { options: { tags: tags.map((t) => t.value) } } } });
@@ -18,7 +19,7 @@
 
 <Tags on:change={search} bind:tags />
 <New bind:open on:add={({ detail }) => (current = detail)} />
-<Call bind:call={current} />
+<Call bind:leave_id bind:call={current} />
 
 <Row>
 	<Column>
@@ -33,7 +34,13 @@
 	<Column>
 		<ButtonSet stacked>
 			{#each calls as call}
-				<Button kind="ghost" on:click={() => (current = call)}>{call.id}</Button>
+				<Button
+					kind="ghost"
+					on:click={() => {
+						if (current) leave_id = current.id;
+						current = call;
+					}}>{call.id}</Button
+				>
 			{/each}
 		</ButtonSet>
 	</Column>

@@ -1,13 +1,16 @@
 <script lang='ts'>
-    import type {Peer } from "$lib/types"
-    export let r: Peer
+    import type {_Remote } from "$lib/types"
+    export let r: _Remote
 
-    $: r.ref.srcObject = r.stream
+    let ref;
+    $: if (ref) ref.srcObject = r?.stream
 </script>
 
-<audio class="audio" autoplay={true} bind:this={r.ref} />
-
-<style lang="sass">
+{#if r?.stream}
+_str
+<audio class="audio" autoplay={true} bind:this={ref} />
+{/if}
+<!-- <style lang="sass">
     .audio
         display: none
-</style>
+</style> -->

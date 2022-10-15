@@ -51,11 +51,13 @@ export const req = async (data: any, auth = false) => {
 	const id = uuidv4();
 	console.log(id);
 	let model = data;
-	if (auth) model[Object.keys(model)[0]].token = get(token);
+	if (typeof model !== "string") {
+		if (auth) model[Object.keys(model)[0]].token = get(token);
+	}
 	return new Promise((resolve) => {
 		reqs.set(id, resolve);
 		getWS().then((socket) =>
-			socket.send(JSON.stringify({ id, model: JSON.stringify(model) }))
+			socket.send(JSON.stringify({ id, model }))
 		);
 	});
 };
