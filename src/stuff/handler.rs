@@ -1,11 +1,11 @@
 use crate::{
-        msg::{Model, Request, Sender},
-        user::User,
-        call::Call,
+    call::Call,
+    msg::{Model, Request, Sender},
+    user::User,
     /*Client, Clients,*/ Result,
 };
 use futures::{FutureExt, StreamExt};
-use log::{error, debug};
+use log::{debug, error};
 use serde::Serialize;
 use serde_json::{from_str, json, to_string};
 use std;
@@ -103,7 +103,7 @@ pub async fn client_connection(socket: WebSocket, id: String /*, clients: Client
             sender: None, // sender: Some(sender)
         },
     );*/
-    error!("{} connected", &id);
+    log::debug!("{} connected", &id);
 
     while let Some(result) = client_ws_rcv.next().await {
         match result {
@@ -120,19 +120,10 @@ pub async fn client_connection(socket: WebSocket, id: String /*, clients: Client
                             Ok(request) => {
                                 let msg_id = &request.id;
                                 if let Some(model) = request.model {
-                                    match from_str(&model) {
-                                        Err(e) => {
-                                            error!("from_str({}): {}", &model, e);
-                                            internal_error(msg_id, &sender);
-                                        }
-                                        Ok(model) => match model {
-                                            Model::User(action) => {
-                                                User::act(msg_id, &sender, action)
-                                            }
-                                            Model::Call(action) => {
-                                                Call::act(msg_id, &sender, action)
-                                            }
-                                        },
+                                    match model {
+                                        Model::Id => send_base(&sender, &id),
+                                        Model::User(action) => User::act(msg_id, &sender, action),
+                                        Model::Call(action) => Call::act(msg_id, &sender, action),
                                     }
                                 }
                             }
@@ -152,5 +143,5 @@ pub async fn client_connection(socket: WebSocket, id: String /*, clients: Client
         };
     }
     // clients.write().await.remove(&id);
-    error!("{} disconnected", id);
+    log::debug!("{} disconnected", id);
 }

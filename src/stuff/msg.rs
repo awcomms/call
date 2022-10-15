@@ -7,7 +7,7 @@ pub type Sender = tokio::sync::mpsc::UnboundedSender<std::result::Result<warp::w
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Request {
     pub id: String,
-    pub model: Option<String>
+    pub model: Option<Model>
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -19,7 +19,8 @@ pub struct Response<D> {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Model {
     User(UserAction),
-    Call(call::Action)
+    Call(call::Action),
+    Id
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
