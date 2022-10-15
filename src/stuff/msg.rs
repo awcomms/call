@@ -1,6 +1,6 @@
 use tokio;
 use serde::{Serialize, Deserialize};
-use crate::stuff::{user::UserAction};
+use crate::stuff::{call, user::UserAction};
 
 pub type Sender = tokio::sync::mpsc::UnboundedSender<std::result::Result<warp::ws::Message, warp::Error>>;
 
@@ -18,7 +18,8 @@ pub struct Response<D> {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Model {
-    User(UserAction)
+    User(UserAction),
+    Call(call::Action)
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

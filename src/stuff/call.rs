@@ -56,6 +56,10 @@ impl Crud for Call {
     }
 
     fn set(&mut self, options: SetOptions) -> SendResult<Self> {
+        print!("options: {:#?}", &options);
+        if let Some(name) = options.name {
+            self.name = Some(name);
+        }
         if let Some(add_ids) = options.add_ids {
             for id in add_ids{
                 self.ids.insert(id);

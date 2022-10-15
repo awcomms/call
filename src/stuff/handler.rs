@@ -1,6 +1,7 @@
 use crate::{
         msg::{Model, Request, Sender},
         user::User,
+        call::Call,
     /*Client, Clients,*/ Result,
 };
 use futures::{FutureExt, StreamExt};
@@ -127,6 +128,9 @@ pub async fn client_connection(socket: WebSocket, id: String /*, clients: Client
                                         Ok(model) => match model {
                                             Model::User(action) => {
                                                 User::act(msg_id, &sender, action)
+                                            }
+                                            Model::Call(action) => {
+                                                Call::act(msg_id, &sender, action)
                                             }
                                         },
                                     }
