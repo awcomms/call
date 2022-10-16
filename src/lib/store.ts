@@ -88,6 +88,7 @@ export const loginOpen = booleanStore("loginOpen");
 export const previousPage = stringStore("previousPage", "/");
 export const newUser = booleanStore("newUser");
 export const users = arrayStore("users", []);
+export const searchTags = arrayStore("searchTags", []);
 export const userTags = arrayStore("userTags", []);
 export const isSideNavOpen = booleanStore("isSideNavOpen");
 export const token = stringStore("token");

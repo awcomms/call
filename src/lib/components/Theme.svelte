@@ -1,14 +1,14 @@
-<script>
+<script lang="ts">
   export let persist = false;
   export let persistKey = "theme";
-  export let theme = "white";
+  export let theme = "g90";
   export const themes = ["white", "g10", "g90", "g100"];
 
   import { onMount, afterUpdate, setContext } from "svelte";
   import { writable, derived } from "svelte/store";
 
-  const isValidTheme = (value) => themes.includes(value);
-  const isDark = (value) =>
+  const isValidTheme = (value: string) => themes.includes(value);
+  const isDark = (value: string) =>
     isValidTheme(value) && (value === "g90" || value === "g100");
 
   const carbon_theme = writable(theme);
@@ -22,7 +22,7 @@
   let _document = null;
 
   setContext("Theme", {
-    updateVar: (name, value) => {
+    updateVar: (name: string, value: string) => {
       if (_document != null) {
         _document.documentElement.style.setProperty(name, value);
       }
@@ -36,7 +36,7 @@
     _document = window.document;
 
     try {
-      const persisted_theme = localStorage.getItem(persistKey);
+      const persisted_theme = localStorage.getItem(persistKey) || "";
 
       if (isValidTheme(persisted_theme)) {
         carbon_theme.set(persisted_theme);
