@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use crate::{user::User, user_call::UserCall, util::link::Link, handler::send_error};
 
 use serde::{Deserialize, Serialize};
 
@@ -16,7 +17,9 @@ pub struct Call {
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct SearchOptions {
     tags: Option<Vec<String>>,
-    location: Option<Location>
+    location: Option<Location>,
+    favorite: Option<bool>,
+    saved: Option<bool>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -24,6 +27,8 @@ pub struct SetOptions {
     name: Option<String>,
     tags: Option<Vec<String>>,
     location: Option<Location>,
+    favorite: Option<bool>,
+    saved: Option<bool>,
     add_ids: Option<Vec<String>>,
     remove_ids: Option<Vec<String>>
 }
@@ -42,7 +47,38 @@ impl DbTags for Call {
 }
 
 impl Auth for Call {
+    fn search(token: Option<String>, options: SearchOptions, msg_id: &str, sender: &Sender) -> SendResult<Vec<Self>> {
+        let mut all = if let Some(tags) = options.tags {
+            println!("tags");
+            <Self as DbTags>::sort(&tags)?
+        } else {
+            <Self as DbItem>::all()?
+        };
 
+        if let Some(saved) = options.saved {
+            let user = User::auth_option(&token)?;
+            all = all.into_iter().filter(|call| {
+                let user_call = <UserCall as Link>::get(call, &user);
+                match user_call {
+                    Ok(u) => u.saved() == saved,
+                    Err(e) => {send_error(msg_id, sender, e); panic!()}
+                }
+            }).collect::<Vec<Self>>();
+        }
+
+        if let Some(favorite) = options.favorite {
+            let user = User::auth_option(&token)?;
+            all = all.into_iter().filter(|call| {
+                let user_call = <UserCall as Link>::get(call, &user);
+                match user_call {
+                    Ok(u) => u.favorite() == favorite,
+                    Err(e) => {send_error(msg_id, sender, e); panic!()}
+                }
+            }).collect::<Vec<Self>>();
+        }
+
+        Ok(all)
+    }
 }
 
 impl Crud for Call {
@@ -75,14 +111,5 @@ impl Crud for Call {
             self.ids.retain(|x| !remove_ids.contains(x));
         }
         self.save()
-    }
-
-    fn search(options: SearchOptions) -> SendResult<Vec<Self>> {
-        if let Some(tags) = options.tags {
-            println!("tags");
-            <Self as DbTags>::sort(&tags)
-        } else {
-            <Self as DbItem>::all()
-        }
     }
 }

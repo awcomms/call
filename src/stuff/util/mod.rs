@@ -12,7 +12,7 @@ pub mod db;
 pub fn get_from_claims(claims: BTreeMap<String, String>, key: &str) -> SendResult<String> {
     match claims.get(key) {
         Some(v) => Ok(v.clone()),
-        None => Err(Some("invalid token")),
+        None => Err(Some("invalid token".to_string())),
     }
 }
 

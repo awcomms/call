@@ -1,4 +1,4 @@
-use crate::{db::DbItem, handler::SendResult};
+use crate::{db::DbItem, handler::SendResult, msg::Sender};
 
 pub trait Auth: Crud {
     fn new(token: Option<String>, options: Self::SetOptions) -> SendResult<Self> {
@@ -13,7 +13,7 @@ pub trait Auth: Crud {
         <Self as DbItem>::get(id)
     }
 
-    fn search(token: Option<String>, options: Self::SearchOptions) -> SendResult<Vec<Self>> {
+    fn search(token: Option<String>, options: Self::SearchOptions, msg_id: &str, sender: &Sender) -> SendResult<Vec<Self>> {
         <Self as Crud>::search(options)
     }
 
@@ -22,11 +22,11 @@ pub trait Auth: Crud {
     }
 
     fn drop(token: Option<String>, id: u64) -> SendResult<()> {
-        Err(Some("unsupported action"))
+        Err(Some("unsupported action".to_string()))
     }
 
     fn drop_all(token: Option<String>) -> SendResult<()> {
-        Err(Some("unsupported action"))
+        Err(Some("unsupported action".to_string()))
     }
 }
 
@@ -58,7 +58,7 @@ macro_rules! dbapi {
                     Action::Get { token, id } => send_res(msg_id, sender, <Self as Auth>::get(token, id)),
                     Action::Set { token, id, options } => send_res(msg_id, sender, <Self as Auth>::set(token, id, options)),
                     Action::All {token} => send_res(msg_id, sender, <Self as Auth>::all(token)),
-                    Action::Search{ token, options} => send_res(msg_id, sender, <Self as Auth>::search(token, options)),
+                    Action::Search{ token, options} => send_res(msg_id, sender, <Self as Auth>::search(token, options, msg_id, sender)),
                     Action::Drop { id, token } => send_res(msg_id, sender, <Self as Auth>::drop(token, id)),
                     Action::DropAll{token} => send_res(msg_id, sender, <Self as Auth>::drop_all(token)),
                 }

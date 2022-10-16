@@ -132,7 +132,7 @@ pub trait DbItem: Debug + Clone + Sized + From<sled::IVec> + Into<sled::IVec> {
                     if let Some(v) = v {
                         Ok(Self::from(v))
                     } else {
-                        Err(Some("did not find specified item with specified id"))
+                        Err(Some("did not find specified item with specified id".to_string()))
                     }
                 }
             }

@@ -47,7 +47,7 @@ fn key() -> SendResult<Hmac<Sha256>> {
 impl User {
     pub fn new(email: String, username: String, password: String) -> SendResult<Self> {
         match Self::all()?.into_iter().find(|u| u.username == username) {
-            Some(_) => Err(Some("user with specified username already exists")),
+            Some(_) => Err(Some("user with specified username already exists".to_string())),
             None => Self {
                 id: new_id()?,
                 email,
@@ -130,7 +130,7 @@ impl User {
     fn get_by_username(username: &str) -> SendResult<Self> {
         match User::all()?.into_iter().find(|u| u.username == username) {
             Some(user) => Ok(user),
-            None => Err(Some("user with specified username not found")),
+            None => Err(Some("user with specified username not found".to_string())),
         }
     }
 
@@ -159,7 +159,7 @@ impl User {
             Ok(claims) => Ok(claims),
             Err(e) => {
                 error!("User::check_token({}): {}", token, e);
-                Err(Some("invalid token"))
+                Err(Some("invalid token".to_string()))
             }
         }
     }
@@ -167,7 +167,7 @@ impl User {
     fn username_from_token(token: &str) -> SendResult<String> {
         match User::check_token(token)?.get("username") {
             Some(username) => Ok(username.clone()),
-            None => Err(Some("invalid token")),
+            None => Err(Some("invalid token".to_string())),
         }
     }
 
@@ -201,12 +201,12 @@ impl User {
                     if res {
                         User::token_with_id(&u)
                     } else {
-                        Err(Some("wrong password"))
+                        Err(Some("wrong password".to_string()))
                     }
                 }
                 Err(()) => Err(None),
             },
-            None => Err(Some("did not find user with specified username")),
+            None => Err(Some("did not find user with specified username".to_string())),
         }
     }
 
@@ -215,7 +215,7 @@ impl User {
             Ok(id) => User::get(id),
             Err(e) => {
                 error!("ayah Favor: {}", e);
-                Err(Some("error parsing authentication token"))
+                Err(Some("error parsing authentication token".to_string()))
             }
         }
 
@@ -224,18 +224,18 @@ impl User {
         //         Ok(id) => User::get(id),
         //         Err(e) => {
         //             error!("User::auth({}): {}", token, e);
-        //             Err(Some("invalid token"))
+        //             Err(Some("invalid token".to_string()))
         //         }
         //     },
-        //     None => Err(Some("invalid token")),
+        //     None => Err(Some("invalid token".to_string())),
         // }
     }
     
-    pub fn auth_option(token: Option<String>) -> SendResult<Self> {
+    pub fn auth_option(token: &Option<String>) -> SendResult<Self> {
         if let Some(token) = token {
             User::auth(&token)
         } else {
-            Err(Some("auth token required, none provided"))
+            Err(Some("auth token required, none provided".to_string()))
         }
     }
 

@@ -1,5 +1,6 @@
 use crate::{
     call::Call,
+    user_call::UserCall,
     msg::{Model, Request, Sender},
     user::User,
     /*Client, Clients,*/ Result,
@@ -18,9 +19,9 @@ use warp::{
     Reply,
 };
 
-pub type SendResult<T> = std::result::Result<T, Option<&'static str>>;
+pub type SendResult<T> = std::result::Result<T, Option<String>>;
 
-pub fn send_error(id: &str, sender: &Sender, e: Option<&'static str>) {
+pub fn send_error(id: &str, sender: &Sender, e: Option<String>) {
     if let Some(e) = e {
         debug!("{}", e);
         send_error_text(id, sender, &e);
@@ -124,6 +125,7 @@ pub async fn client_connection(socket: WebSocket, id: String /*, clients: Client
                                         Model::Id => send(msg_id, &sender, &id),
                                         Model::User(action) => User::act(msg_id, &sender, action),
                                         Model::Call(action) => Call::act(msg_id, &sender, action),
+                                        Model::UserCall(action) => UserCall::act(msg_id, &sender, action),
                                     }
                                 }
                             }
