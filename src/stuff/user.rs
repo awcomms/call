@@ -270,35 +270,7 @@ impl User {
     }
 }
 
-impl From<sled::IVec> for User {
-    fn from(ivec: sled::IVec) -> Self {
-        match std::str::from_utf8(&ivec[..]) {
-            Ok(res) => match from_str(res) {
-                Ok(res) => res,
-                Err(e) => {
-                    error!("User::try_from->from_str({:#?})->{:#?}: {}", ivec, res, e);
-                    panic!()
-                }
-            },
-            Err(e) => {
-                error!("User::try_from({:#?}): {}", ivec, e);
-                panic!()
-            }
-        }
-    }
-}
-
-impl From<User> for sled::IVec {
-    fn from(v: User) -> Self {
-        match to_string(&v) {
-            Ok(res) => sled::IVec::from(res.as_bytes()),
-            Err(e) => {
-                error!("sled::IVec::try_from({:#?}): {}", v, e);
-                panic!()
-            }
-        }
-    }
-}
+crate::from!(User);
 
 impl DbTags for User {
     fn tags(&self) -> Tags {

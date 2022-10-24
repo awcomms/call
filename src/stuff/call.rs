@@ -47,9 +47,8 @@ impl DbTags for Call {
 }
 
 impl Auth for Call {
-    fn search(token: Option<String>, options: SearchOptions, msg_id: &str, sender: &Sender) -> SendResult<Vec<Self>> {
+    fn search(token: Option<String>, options: SearchOptions) -> SendResult<Vec<Self>> {
         let mut all = if let Some(tags) = options.tags {
-            println!("tags");
             <Self as DbTags>::sort(&tags)?
         } else {
             <Self as DbItem>::all()?
@@ -57,26 +56,29 @@ impl Auth for Call {
 
         if let Some(saved) = options.saved {
             let user = User::auth_option(&token)?;
-            all = all.into_iter().filter(|call| {
-                let user_call = <UserCall as Link>::get(call, &user);
-                match user_call {
-                    Ok(u) => u.saved() == saved,
-                    Err(e) => {send_error(msg_id, sender, e); panic!()}
-                }
-            }).collect::<Vec<Self>>();
+            let mut _all = Vec::new();
+            for call in all {
+                let user_call = <UserCall as Link>::get(&call, &user)?;
+                if user_call.saved() == saved {
+                    _all.push(call)
+                };
+            };
+            all = _all;
         }
 
         if let Some(favorite) = options.favorite {
             let user = User::auth_option(&token)?;
-            all = all.into_iter().filter(|call| {
-                let user_call = <UserCall as Link>::get(call, &user);
-                match user_call {
-                    Ok(u) => u.favorite() == favorite,
-                    Err(e) => {send_error(msg_id, sender, e); panic!()}
-                }
-            }).collect::<Vec<Self>>();
-        }
 
+            let mut _all = Vec::new();
+            for call in all {
+                let user_call = <UserCall as Link>::get(&call, &user)?;
+                if user_call.favorite() == favorite {
+                    _all.push(call)
+                };
+            };
+
+            all = _all;
+        }
         Ok(all)
     }
 }
