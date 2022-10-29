@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { req } from '$lib/req';
 	import { Row, Column, ButtonSet, Button } from 'carbon-components-svelte';
-	import { New, Call } from '$lib/components';
+	import { New, Call, CallEntry } from '$lib/components';
 	import type { _Tag } from '$lib/components/Tag';
 	import type { _Call } from '$lib/types';
 	import { user, searchTags } from '$lib/store';
 	import SearchOptions from '$lib/components/SearchOptions.svelte';
 
-	$: search(favorite, saved)
+	$: search(favorite, saved);
 
 	let calls: _Call[] = [];
 	let open = false;
@@ -20,12 +20,16 @@
 	let searchOptionsOpen = false;
 
 	const search = async () => {
-		let res = await req({ Call: { Search: { options: { tags: $searchTags.map((t) => t.value), favorite, saved } } } });
+		console.log('sa')
+		let res = await req({
+			Call: { Search: { options: { tags: $searchTags.map((t) => t.value), favorite, saved } } }
+		});
 		if (res.error) {
-			console.log('calls search error', res.error)
+			console.log('calls search error', res.error);
 		} else {
-			calls = res
+			calls = res;
 		}
+		console.log('sa')
 	};
 </script>
 
@@ -50,25 +54,13 @@
 	<Column>
 		<ButtonSet stacked>
 			{#each calls as call}
-				<ButtonSet>
-					<Button
-						kind="ghost"
-						on:click={() => {
-							if (current) leave_id = current.id;
-							current = call;
-						}}>{call.id} {call.name}</Button
-					>
-					{#if $user}
-						<!-- <Button
-						kind="ghost"
-						on:click={() => {
-							if (current) leave_id = current.id;
-							current = call;
-						}}
-						icon={}
-					/> -->
-					{/if}
-				</ButtonSet>
+				<CallEntry
+					on:click={() => {
+						if (current) leave_id = current.id;
+						current = call;
+					}}
+					bind:call
+				/>
 			{/each}
 		</ButtonSet>
 	</Column>

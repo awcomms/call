@@ -63,6 +63,7 @@
       ...tags,
       { label: "", value: "", inputRef: null, ref: null, exact: false },
     ];
+    dispatch("change");
     // }
   };
 
@@ -82,7 +83,7 @@
 {#if text}<p>{text}</p>{/if}
 
 <div class="head">
-  <p class="title" on:click={toggleOpen}>
+  <p class="title" on:keydown={toggleOpen} on:click={toggleOpen}>
     {#if open}
       <CaretUp />
     {:else}
@@ -127,7 +128,7 @@
       {/if}
       <Tag
         inputEventDelay={2100}
-        on:input={() => dispatch("change")}
+        on:input={() => {/*dispatch("change")*/}}
         on:enter={add}
         bind:label={tag.label}
         bind:value={tag.value}

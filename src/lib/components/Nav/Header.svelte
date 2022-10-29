@@ -100,8 +100,6 @@
 			<SideNavLink on:click={install} href={null} text="Add Webapp To Homescreen" />
 		{/if}
 		{#if $user}
-			<SideNavLink text="Saved" />
-			<SideNavLink text="Favorites" />
 			<SideNavLink text="Logout" href={null} on:click={exit} />
 		{:else}
 			<SideNavLink href={null} on:click={() => ($loginOpen = true)} text="Login" />

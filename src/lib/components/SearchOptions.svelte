@@ -9,7 +9,7 @@
 </script>
 
 <Modal modalHeading="search options" passiveModal hasForm bind:open>
-    <Tags on:change bind:tags={$searchTags} />
+    <Tags on:change={()=>console.log('s')} bind:tags={$searchTags} />
     {#if $user}
         <Checkbox bind:checked={saved} labelText="include saved calls" />
         <Checkbox bind:checked={favorite} labelText="include favorite calls" />

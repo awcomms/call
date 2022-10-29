@@ -1,7 +1,8 @@
 export interface _Call {
     id: string,
     name: string,
-    ids: string[]
+    ids: string[],
+    saved: boolean,
 }
 
 export interface _Remote {
