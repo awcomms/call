@@ -23,6 +23,8 @@ pub struct User {
     id: u64,
     tags: Tags,
     email: String,
+    instagram: String,
+    twitter: String,
     username: String,
     password_hash: String,
 }
@@ -31,6 +33,8 @@ pub struct User {
 pub struct SetOptions {
     email: Option<String>,
     username: Option<String>,
+    instagram: Option<String>,
+    twitter: Option<String>,
     tags: Option<Vec<String>>,
 }
 
@@ -69,6 +73,12 @@ impl User {
         };
         if let Some(username) = options.username {
             self.username = username
+        };
+        if let Some(instagram) = options.instagram {
+            self.instagram = instagram
+        };
+        if let Some(twitter) = options.twitter {
+            self.twitter = twitter
         };
         if let Some(tags) = options.tags {
             self.tags.set(&tags)
