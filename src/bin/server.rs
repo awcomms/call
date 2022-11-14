@@ -23,10 +23,10 @@ async fn main() {
         .with(warp::cors().allow_any_origin());
 
     #[cfg(debug_assertions)]
-    warp::serve(routes).run(([127, 0, 0, 1], 8000)).await;
+    warp::serve(routes).run(([127, 0, 0, 1], 10000)).await;
 
     #[cfg(not(debug_assertions))]
-    warp::serve(routes).run(([0, 0, 0, 0], 8000)).await;
+    warp::serve(routes).run(([0, 0, 0, 0], 10000)).await;
     
     fn with_clients(clients: Clients) -> impl Filter<Extract = (Clients,), Error = Infallible> + Clone {
         warp::any().map(move || clients.clone())
