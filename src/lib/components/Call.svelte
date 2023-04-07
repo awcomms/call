@@ -1,33 +1,52 @@
 <script lang="ts">
+	export let leave_trigger: boolean;
+
 	import type { _Call } from '$lib/types';
 	import Audio from '$lib/components/Audio.svelte';
 	import type { _Remote } from '$lib/types';
 	import { PEER_SERVER } from '$lib/env';
 	import type { MediaConnection, Peer as _Peer } from 'peerjs';
-	import { peer } from "$lib/store"
+	import { peer } from '$lib/store';
+	import axios from 'axios';
 
 	export let call: _Call;
 
-	export let leave_id: string;
 
-	$: leave(leave_id);
+	$: leave(leave_trigger);
 
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
-	import { req } from '$lib/req';
+	import { v4 } from 'uuid';
 
 	$: if (call && browser) init();
 
 	let localStream: any;
 	let remotes: _Remote[] = [];
 
-	const leave = (id: string) => {
-		if (!id) return;
-		req({ Call: { Set: { id: call.id, options: { remove_ids: [id] } } } });
+	const leave = async (..._trigger: any[]) => {
+		await axios.post('/pinecone', {
+			act: 'update',
+			arg: {
+				updateRequest: {
+					id: call.id,
+					setMetadata: { ids: call.ids.filter((i) => i !== $peer.id) },
+					namespace: 'call'
+				}
+			}
+		});
 	};
 
-	const join = () => {
-		req({ Call: { Set: { id: call.id, options: { add_ids: [$peer.id] } } } });
+	const join = async () => {
+		await axios.post('/pinecone', {
+			act: 'update',
+			arg: {
+				updateRequest: {
+					id: call.id,
+					setMetadata: { ids: [...call.ids, $peer.id] },
+					namespace: 'call'
+				}
+			}
+		});
 	};
 
 	const init = () => {
@@ -42,13 +61,13 @@
 
 	const resolve = (c: MediaConnection) => {
 		c.on('stream', (stream: MediaStream) => {
-			console.log('got stream')
+			console.log('got stream');
 			let r = remotes.find((_) => _.peer === c.peer);
 			if (r) {
 				console.log('existing peer', r.peer);
 				r.stream = stream;
 			} else {
-				console.log('new peer', c.peer)
+				console.log('new peer', c.peer);
 				remotes.push({ stream, peer: c.peer });
 				remotes = remotes;
 			}
@@ -61,11 +80,7 @@
 		});
 		import('peerjs').then(async (peerjs) => {
 			if (browser) {
-				let id = await req('Id');
-				if (id.error) {
-					console.log(id);
-					return;
-				}
+				let id = v4();
 				$peer = new peerjs.Peer(id, { host: PEER_SERVER });
 				$peer.on('call', (c) => {
 					c.answer(localStream);

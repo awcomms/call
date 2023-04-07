@@ -4,15 +4,16 @@
 	import { New, Call, CallEntry } from '$lib/components';
 	import type { _Tag } from '$lib/components/Tag';
 	import type { _Call } from '$lib/types';
-	import { user, searchTags } from '$lib/store';
+	import { searchTags } from '$lib/store';
 	import SearchOptions from '$lib/components/SearchOptions.svelte';
+	import axios from 'axios';
 
-	$: search(favorite, saved);
+	// $: search(favorite, saved);
 
 	let calls: _Call[] = [];
 	let open = false;
 	let current: _Call;
-	let leave_id: string;
+	let leave_trigger: boolean;
 
 	let saved = false;
 	let favorite = false;
@@ -20,23 +21,27 @@
 	let searchOptionsOpen = false;
 
 	const search = async () => {
-		console.log('sa')
-		let res = await req({
-			Call: { Search: { options: { tags: $searchTags.map((t) => t.value), favorite, saved } } }
-		});
-		if (res.error) {
-			console.log('calls search error', res.error);
-		} else {
-			calls = res;
-		}
-		console.log('sa')
+		console.log('sa');
+		await axios
+			.post('/embeddings', JSON.stringify({ tags: $searchTags }))
+			.then(async ({ data: vector }) => {
+				await axios
+					.post('/pinecone', {
+						act: 'query',
+						arg: { queryRequest: { topK: 3, vector, includeValues: true } }
+					})
+					.then(({ data }) => {
+						calls = data.vectors;
+					});
+			});
+		console.log('sa');
 	};
 </script>
 
 <SearchOptions bind:saved bind:favorite bind:open={searchOptionsOpen} on:change={search} />
 
 <New bind:open on:add={({ detail }) => (current = detail)} />
-<Call bind:leave_id bind:call={current} />
+<Call bind:leave_trigger bind:call={current} />
 
 <Row>
 	<Column>
@@ -56,7 +61,7 @@
 			{#each calls as call}
 				<CallEntry
 					on:click={() => {
-						if (current) leave_id = current.id;
+						if (current) leave_trigger = !leave_trigger;
 						current = call;
 					}}
 					bind:call

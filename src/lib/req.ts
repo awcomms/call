@@ -11,7 +11,7 @@ interface Res {
 	data: string;
 }
 
-const socket = new iso_ws(BACKEND);
+const socket = {} //new iso_ws(BACKEND);
 
 // TODO error notification if response error
 
@@ -54,8 +54,8 @@ export const req = async (data: any, auth = false) => {
 	}
 	return new Promise((resolve) => {
 		reqs.set(id, resolve);
-		getWS().then((socket) =>
-			socket.send(JSON.stringify({ id, model }))
+		getWS().then((socket) =>{}
+			// socket.send(JSON.stringify({ id, model }))
 		);
 	});
 };
