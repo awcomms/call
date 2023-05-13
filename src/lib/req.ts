@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
-import { get } from 'svelte/store'
-import { token } from '$lib/store'
+import { get } from 'svelte/store';
+import { token } from '$lib/stores';
 import { BACKEND } from '$lib/env';
 import iso_ws from 'isomorphic-ws';
 
@@ -11,7 +11,7 @@ interface Res {
 	data: string;
 }
 
-const socket = {} //new iso_ws(BACKEND);
+const socket = {}; //new iso_ws(BACKEND);
 
 // TODO error notification if response error
 
@@ -31,10 +31,10 @@ socket.onmessage = ({ data }: { data: string }) => {
 			console.error(`response with unmatched id: ${JSON.stringify(res)}`);
 		} else {
 			try {
-				const json_res = JSON.parse(res.data)
-				resolve(json_res)
+				const json_res = JSON.parse(res.data);
+				resolve(json_res);
 			} catch {
-				resolve(res.data)
+				resolve(res.data);
 			}
 		}
 	} catch {
@@ -43,18 +43,19 @@ socket.onmessage = ({ data }: { data: string }) => {
 };
 
 socket.onerror = (e) => {
-	console.log('socket error', e)
-}
+	console.log('socket error', e);
+};
 
 export const req = async (data: any, auth = false) => {
 	const id = uuidv4();
 	let model = data;
-	if (typeof model !== "string") {
+	if (typeof model !== 'string') {
 		if (auth) model[Object.keys(model)[0]].token = get(token);
 	}
 	return new Promise((resolve) => {
 		reqs.set(id, resolve);
-		getWS().then((socket) =>{}
+		getWS().then(
+			(socket) => {}
 			// socket.send(JSON.stringify({ id, model }))
 		);
 	});

@@ -6,12 +6,12 @@
   export let menuItem = false
   export let isSelected = $page.url.pathname === href
 
-  import { isSideNavOpen } from "$lib/store";
+  import { isSideNavOpen } from "./store";
   import { SideNavLink, SideNavMenuItem } from "carbon-components-svelte";
 
   let component = menuItem ? SideNavMenuItem : SideNavLink
 
-  let _href = href === null ? undefined : `/${text.toLowerCase().replace(" ", "-")}`;
+  let _href = href ? href : href === null ? undefined : `/${text.toLowerCase().replace(" ", "-")}`;
 
   const click = () => {
     $isSideNavOpen = false;

@@ -1,10 +1,8 @@
-import { browser } from "$app/environment";
-import { req } from "$lib/req";
-import { writable, derived } from 'svelte/store';
-import type { Peer } from 'peerjs';
+import { browser } from '$app/environment';
+import { writable } from 'svelte/store';
 
 export const booleanStore = (key = '', initialValue = false) => {
-	let previousValue: boolean
+	let previousValue: boolean;
 	if (browser) {
 		const fromLocalStorage = localStorage.getItem(key);
 		if (fromLocalStorage) {
@@ -13,7 +11,7 @@ export const booleanStore = (key = '', initialValue = false) => {
 			previousValue = initialValue;
 		}
 	} else {
-		previousValue = initialValue
+		previousValue = initialValue;
 	}
 	const s = writable<boolean>(previousValue);
 	if (browser) s.subscribe((v) => localStorage.setItem(key, String(v)));
@@ -21,7 +19,7 @@ export const booleanStore = (key = '', initialValue = false) => {
 };
 
 export const numberStore = (key = '', initialValue = 0) => {
-	let previousValue: number
+	let previousValue: number;
 	if (browser) {
 		const fromLocalStorage = localStorage.getItem(key);
 		if (fromLocalStorage) {
@@ -30,7 +28,7 @@ export const numberStore = (key = '', initialValue = 0) => {
 			previousValue = initialValue;
 		}
 	} else {
-		previousValue = initialValue
+		previousValue = initialValue;
 	}
 	const s = writable<number>(previousValue);
 	if (browser) s.subscribe((v) => localStorage.setItem(key, String(v)));
@@ -40,7 +38,7 @@ export const numberStore = (key = '', initialValue = 0) => {
 export const stringStore = (key = '', initialValue = '') => {
 	let previousValue: string;
 	if (browser) {
-		previousValue = localStorage.getItem(key) || initialValue
+		previousValue = localStorage.getItem(key) || initialValue;
 	} else {
 		previousValue = initialValue;
 	}
@@ -54,9 +52,9 @@ export const arrayStore = (key = '', initialValue: Array<any>) => {
 	if (browser) {
 		const fromLocalStorage = localStorage.getItem(key);
 		if (fromLocalStorage) {
-			previousValue = JSON.parse(fromLocalStorage)
+			previousValue = JSON.parse(fromLocalStorage);
 		} else {
-			previousValue = initialValue
+			previousValue = initialValue;
 		}
 	} else {
 		previousValue = initialValue;
@@ -83,20 +81,27 @@ export const objectStore = (key = '', initialValue: object) => {
 	return s;
 };
 
-export const loginOpen = booleanStore("loginOpen");
-
-export const previousPage = stringStore("previousPage", "/");
-export const newUser = booleanStore("newUser");
-export const users = arrayStore("users", []);
-export const searchTags = arrayStore("searchTags", []);
-export const userTags = arrayStore("userTags", []);
-export const isSideNavOpen = booleanStore("isSideNavOpen");
-export const token = stringStore("token");
-
-export const peer = writable<Peer>(undefined);
-
-export const user = derived(token, ($token, set) => {
-	req({User: {Auth: $token}}).then((r) => {
-		set(r)
-	});
-});
+export const typeStore = <Type>(key = '', initialValue: Type) => {
+	let previousValue: Type;
+	if (browser) {
+		const fromLocalStorage = localStorage.getItem(key);
+		if (fromLocalStorage) {
+			try {
+				previousValue = JSON.parse(fromLocalStorage);
+			} catch {
+				previousValue = fromLocalStorage;
+			}
+		} else {
+			previousValue = initialValue;
+		}
+	} else {
+		previousValue = initialValue;
+	}
+	const s = writable<Type>(previousValue);
+	if (browser)
+		s.subscribe((v) => {
+			console.log('s', v);
+			localStorage.setItem(key, JSON.stringify(v));
+		});
+	return s;
+};

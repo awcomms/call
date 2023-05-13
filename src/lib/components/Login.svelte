@@ -10,7 +10,7 @@
 	} from 'carbon-components-svelte';
 	import Input from '$lib/components/Input/Input.svelte';
 	import { req } from '$lib/req';
-	import { newUser, token, loginOpen } from '$lib/store';
+	import { newUser, token, loginOpen } from '$lib/stores';
 
 	$: if ($newUser) {
 		userText = 'Login instead';
@@ -131,9 +131,9 @@
 		let data = $newUser ? { User: { New: body } } : { User: { Token: body } };
 		const r = await req(data)
 			.then((r) => {
-				console.log(typeof r, r, r.error)
+				console.log(typeof r, r, r.error);
 				if (r.error) {
-					console.log(r.error)
+					console.log(r.error);
 					error = r.error;
 					if (error.includes('email')) {
 						emailInvalid = true;
@@ -153,7 +153,7 @@
 				}
 				$token = r;
 				$loginOpen = false;
-				loading = false
+				loading = false;
 			})
 			.finally(() => {
 				loading = false;

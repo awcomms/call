@@ -1,16 +1,15 @@
 <script lang="ts">
 	export let leave_trigger: boolean;
 
-	import type { _Call } from '$lib/types';
+	import type { Call as _Call } from '$lib/types';
 	import Audio from '$lib/components/Audio.svelte';
 	import type { _Remote } from '$lib/types';
 	import { PEER_SERVER } from '$lib/env';
 	import type { MediaConnection, Peer as _Peer } from 'peerjs';
-	import { peer } from '$lib/store';
+	import { peer } from '$lib/stores';
 	import axios from 'axios';
 
 	export let call: _Call;
-
 
 	$: leave(leave_trigger);
 
@@ -24,6 +23,7 @@
 	let remotes: _Remote[] = [];
 
 	const leave = async (..._trigger: any[]) => {
+		if (!call) return;
 		await axios.post('/pinecone', {
 			act: 'update',
 			arg: {

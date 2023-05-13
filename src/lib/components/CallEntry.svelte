@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { _Call } from '$lib/types';
+	import type { Call as _Call } from '$lib/types';
 	import { SwitchIcon } from '$lib/components';
 	import { ButtonSet, Button } from 'carbon-components-svelte';
 	import Save from 'carbon-icons-svelte/lib/Save.svelte';

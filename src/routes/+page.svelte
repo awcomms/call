@@ -1,72 +1,78 @@
 <script lang="ts">
-	import { req } from '$lib/req';
-	import { Row, Column, ButtonSet, Button } from 'carbon-components-svelte';
-	import { New, Call, CallEntry } from '$lib/components';
-	import type { _Tag } from '$lib/components/Tag';
-	import type { _Call } from '$lib/types';
-	import { searchTags } from '$lib/store';
-	import SearchOptions from '$lib/components/SearchOptions.svelte';
+	import { Button, Modal, TextInput } from 'carbon-components-svelte';
 	import axios from 'axios';
+	import type { Call } from '$lib/types';
+	import type Peer from 'peerjs';
+	import { onMount } from 'svelte';
+	import { PUBLIC_PEER_SERVER } from '$env/static/public';
+	import { v4 } from 'uuid';
+	import type { MediaConnection } from 'peerjs';
 
-	// $: search(favorite, saved);
+	$: if (ref && remote_stream) ref.srcObject = remote_stream;
 
-	let calls: _Call[] = [];
-	let open = false;
-	let current: _Call;
-	let leave_trigger: boolean;
+	let description_open = false,
+		local_stream: MediaStream,
+		remote_stream: MediaStream,
+		description = '',
+		saved_target = '',
+		should_call = true,
+		ref: HTMLAudioElement,
+		peer: Peer;
 
-	let saved = false;
-	let favorite = false;
+	onMount(() => {
+		navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then((stream) => {
+			local_stream = stream;
+			import('peerjs').then(({ default: Peer }) => {
+				peer = new Peer();
+				peer.on('call', (c: MediaConnection) => {
+					if (c.peer === saved_target) {
+						c.answer(stream);
+						c.on('stream', (s) => {
+							remote_stream = s;
+						});
+					} else {
+						c.close();
+					}
+				});
+			});
+		});
+	});
 
-	let searchOptionsOpen = false;
+	const call = (id: string, stream: MediaStream) => {
+		if (!should_call) return;
+		let c = peer.call(id, stream);
+		c.on('stream', (s) => {
+			remote_stream = s;
+		}).on('close', () => {
+			call(id, stream);
+		});
+	};
 
 	const search = async () => {
-		console.log('sa');
-		await axios
-			.post('/embeddings', JSON.stringify({ tags: $searchTags }))
-			.then(async ({ data: vector }) => {
-				await axios
-					.post('/pinecone', {
-						act: 'query',
-						arg: { queryRequest: { topK: 3, vector, includeValues: true } }
-					})
-					.then(({ data }) => {
-						calls = data.vectors;
-					});
-			});
-		console.log('sa');
+		should_call = false;
+		await axios.post('/embedding', description).then(async ({ data: vector }) => {
+			await axios
+				.post('/pinecone', {
+					act: 'query',
+					arg: { queryRequest: { topK: 3, vector, includeValues: true, namespace: 'call' } }
+				})
+				.then(({ data }) => {
+					if (!data.matches.length) return console.log('no matches');
+					saved_target = data.matches[0].id;
+					should_call = true;
+					call(data.matches[0].id, local_stream);
+				});
+		});
 	};
 </script>
 
-<SearchOptions bind:saved bind:favorite bind:open={searchOptionsOpen} on:change={search} />
+<Modal bind:open={description_open} passiveModal modalHeading="Edit description">
+	<TextInput bind:value={description} labelText="Description" />
+	<Button on:click={search}>Set</Button>
+</Modal>
 
-<New bind:open on:add={({ detail }) => (current = detail)} />
-<Call bind:leave_trigger bind:call={current} />
+<Button on:click={() => (description_open = true)}>edit description</Button>
 
-<Row>
-	<Column>
-		{#if current}
-			<p>current call: {current.id}</p>
-		{/if}
-		<ButtonSet stacked>
-			<Button size="small" on:click={() => (searchOptionsOpen = true)}>open search options</Button>
-			<Button size="small" on:click={() => (open = true)}>new</Button>
-		</ButtonSet>
-	</Column>
-</Row>
-
-<Row>
-	<Column>
-		<ButtonSet stacked>
-			{#each calls as call}
-				<CallEntry
-					on:click={() => {
-						if (current) leave_trigger = !leave_trigger;
-						current = call;
-					}}
-					bind:call
-				/>
-			{/each}
-		</ButtonSet>
-	</Column>
-</Row>
+{#if remote_stream}
+	<audio class="audio" autoplay={true} bind:this={ref} />
+{/if}
