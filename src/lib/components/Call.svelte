@@ -4,7 +4,6 @@
 	import type { Call as _Call } from '$lib/types';
 	import Audio from '$lib/components/Audio.svelte';
 	import type { _Remote } from '$lib/types';
-	import { PEER_SERVER } from '$lib/env';
 	import type { MediaConnection, Peer as _Peer } from 'peerjs';
 	import { peer } from '$lib/stores';
 	import axios from 'axios';
@@ -80,8 +79,7 @@
 		});
 		import('peerjs').then(async (peerjs) => {
 			if (browser) {
-				let id = v4();
-				$peer = new peerjs.Peer(id, { host: PEER_SERVER });
+				$peer = new peerjs.Peer();
 				$peer.on('call', (c) => {
 					c.answer(localStream);
 					resolve(c);

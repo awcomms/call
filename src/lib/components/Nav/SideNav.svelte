@@ -10,9 +10,5 @@
 <SideNav bind:isOpen={$isSideNavOpen}>
 	<SideNavItems>
 		<A2HsLink />
-		<!-- <SideNavMenu text="Quiz"> -->
-			<SideNavLink text="Attempt" />
-			<SideNavLink text="Create and Edit" href="/edit" />
-		<!-- </SideNavMenu> -->
 	</SideNavItems>
 </SideNav>
