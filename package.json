@@ -46,6 +46,8 @@
 		"openai": "^3.2.1",
 		"peerjs": "^1.4.7",
 		"sass": "^1.62.1",
+		"socket.io": "^4.6.1",
+		"socket.io-client": "^4.6.1",
 		"uuid": "^9.0.0"
 	}
 }

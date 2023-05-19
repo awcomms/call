@@ -47,8 +47,8 @@ export const stringStore = (key = '', initialValue = '') => {
 	return s;
 };
 
-export const arrayStore = (key = '', initialValue: Array<any>) => {
-	let previousValue: Array<any>;
+export const arrayStore = <Type>(key = '', initialValue: Array<Type>) => {
+	let previousValue: Array<Type>;
 	if (browser) {
 		const fromLocalStorage = localStorage.getItem(key);
 		if (fromLocalStorage) {
@@ -59,7 +59,7 @@ export const arrayStore = (key = '', initialValue: Array<any>) => {
 	} else {
 		previousValue = initialValue;
 	}
-	const s = writable<Array<any>>(previousValue);
+	const s = writable<Array<Type>>(previousValue);
 	if (browser) s.subscribe((v) => localStorage.setItem(key, JSON.stringify(v)));
 	return s;
 };
@@ -100,7 +100,6 @@ export const typeStore = <Type>(key = '', initialValue: Type) => {
 	const s = writable<Type>(previousValue);
 	if (browser)
 		s.subscribe((v) => {
-			console.log('s', v);
 			localStorage.setItem(key, JSON.stringify(v));
 		});
 	return s;

@@ -1,8 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { get } from 'svelte/store';
 import { token } from '$lib/stores';
-import { BACKEND } from '$lib/env';
-import iso_ws from 'isomorphic-ws';
 
 const reqs = new Map();
 
