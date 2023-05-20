@@ -5,20 +5,14 @@
 	import { onMount } from 'svelte';
 	import { namespace } from '$lib/constants';
 	import { description } from '$lib/stores';
-	import { io } from 'socket.io-client';
 
-	const socket = io();
 	let description_open = false,
 		local_stream: MediaStream,
 		remote_stream: MediaStream,
-		// peerjs id of the match to attempt to call
-		saved_target = '',
-		// set to false when description is updated, so recursive searching is halted
 		may_search = true,
 		self_id: string,
 		updating = false,
 		searching = false,
-		double_stream_ref: HTMLVideoElement,
 		remote_stream_ref: HTMLVideoElement,
 		local_stream_ref: HTMLVideoElement,
 		may_edit = false,
@@ -26,64 +20,34 @@
 
 	$: if (remote_stream_ref && remote_stream) remote_stream_ref.srcObject = remote_stream;
 	$: if (local_stream_ref && local_stream) local_stream_ref.srcObject = local_stream;
-	// $: if (double_stream_ref && local_stream) double_stream_ref.srcObject = local_stream;
 
 	onMount(() => {
 		navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then((stream) => {
 			local_stream = stream;
 			import('peerjs').then(async ({ default: Peer }) => {
 				peer = new Peer();
-				peer.on('open', (id) => {
+				peer.on('open', async (id) => {
 					self_id = id;
 					console.log(`your peerjs id is ${id}`);
-					socket.emit('peer_id', id, () => {
-						may_edit = true;
-					});
-					// check if this peer's id exists in pinecone in the call namespace
-					axios
-						.post('/pinecone', {
-							act: 'fetch',
-							arg: { ids: [id], namespace }
-						})
-						.then(async ({ data }) => {
-							// if it is, delete it
-							if (data.vectors[id]) {
-								await axios.post('/pinecone', {
-									act: 'delete1',
-									arg: { ids: [id], namespace }
-								});
+					may_edit = true;
+					await axios.post('/pinecone', {
+						act: 'upsert',
+						arg: {
+							upsertRequest: {
+								id,
+								vectors: [{ id, values: await embedding() }],
+								namespace
 							}
-							//  create it with the description embedding
-							await axios.post('/pinecone', {
-								act: 'upsert',
-								arg: {
-									upsertRequest: {
-										id,
-										vectors: [{ id, values: await embedding() }],
-										namespace
-									}
-								}
-							});
-							await search();
-						});
-				});
-
-				peer.on('connection', (connection) => {
-					connection.on('data', (data) => {
-						if (data === 'call' && connection.peer === saved_target) {
 						}
 					});
+					await search();
 				});
 
 				peer.on('call', (c) => {
-					if (c.peer === saved_target) {
-						c.answer(stream);
-						c.on('stream', (s) => {
-							remote_stream = s;
-						});
-					} else {
-						c.close();
-					}
+					c.answer(stream);
+					c.on('stream', (s) => {
+						remote_stream = s;
+					});
 				});
 			});
 		});
@@ -105,8 +69,13 @@
 				console.log('call closed');
 				await search();
 			})
-			.on('error', (e) => {
-				console.log(`encountered an error: ${JSON.stringify(e)}`);
+			.on('error', async (e) => {
+				console.log(`encountered an error: ${JSON.stringify(e)}, deleting {$id}`);
+				await axios.post('/pinecone', {
+					act: 'delete1',
+					arg: { ids: [id], namespace }
+				});
+				await search();
 			});
 	};
 
@@ -120,24 +89,46 @@
 					queryRequest: { topK: 2, id: peer.id, includeValues: true, namespace }
 				}
 			})
-			.then(({ data }) => {
+			.then(async ({ data }) => {
+				let target = '';
 				if (!data.matches.length) return alert('no one available');
-				saved_target = data.matches[0].id;
-				if (saved_target === peer.id) {
+				if (data.matches[0].id === peer.id) {
 					if (data.matches.length > 1) {
-						saved_target = data.matches[1].id;
+						target = data.matches[1].id;
 					} else {
 						return alert('no one available');
 					}
+				} else {
+					target = data.matches[0].id;
 				}
-				console.log(`saved a target: ${saved_target}`);
-				socket.emit('call', saved_target, async (response: number) => {
-					if (response === 1) {
-						call(saved_target);
-					} else {
-						await search();
+				await axios.post('/pinecone', {
+					act: 'update',
+					arg: {
+						updateRequest: {
+							id: self_id,
+							setMetadata: {
+								target
+							},
+							namespace
+						}
 					}
 				});
+				await axios
+					.post('/pinecone', {
+						act: 'query',
+						arg: {
+							queryRequest: {
+								topK: 1,
+								filter: {
+									target: self_id
+								}
+							}
+						}
+					})
+					.then(({ data }) => {
+						if (!data.matches.length) return;
+						call(data.matches[0].id);
+					});
 			})
 			.finally(() => (searching = false));
 	};
@@ -147,13 +138,12 @@
 		updating = true;
 
 		// edit id in pinecone with description embedding
-		await embedding();
 		await axios
 			.post('/pinecone', {
 				act: 'update',
 				arg: { updateRequest: { id: self_id, values: await embedding(), namespace: 'call' } }
 			})
-			.then(async (r) => {
+			.then(async () => {
 				updating = false;
 				console.log('updated description');
 				may_search = true;
