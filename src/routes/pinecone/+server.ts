@@ -22,6 +22,6 @@ export const POST = (async ({ request }) => {
 			throw error(500, JSON.stringify(e));
 		})
 		.finally(() => {
-			console.log('\n---finally---\n');
+			// console.log('\n---finally---\n');
 		});
 }) satisfies RequestHandler;
