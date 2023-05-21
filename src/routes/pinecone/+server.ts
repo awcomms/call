@@ -8,6 +8,7 @@ type Act = '_delete' | 'describeIndexStats' | 'fetch' | 'query' | 'update' | 'up
 export const POST = (async ({ request }) => {
 	const req = await request.json();
 	const act: Act = req.act;
+	console.log('req: ', req);
 	return await index[act](req.arg)
 		.then((res: AxiosResponse) => {
 			// if (res.statusText !== 'OK') {

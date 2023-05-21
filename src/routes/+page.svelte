@@ -10,7 +10,6 @@
 		local_stream: MediaStream,
 		remote_stream: MediaStream,
 		may_search = true,
-		self_id: string,
 		updating = false,
 		searching = false,
 		remote_stream_ref: HTMLVideoElement,
@@ -27,20 +26,10 @@
 			import('peerjs').then(async ({ default: Peer }) => {
 				peer = new Peer();
 				peer.on('open', async (id) => {
-					self_id = id;
 					console.log(`your peerjs id is ${id}`);
 					may_edit = true;
-					await axios.post('/pinecone', {
-						act: 'upsert',
-						arg: {
-							upsertRequest: {
-								id,
-								vectors: [{ id, values: await embedding() }],
-								namespace
-							}
-						}
-					});
-					await search();
+					// await update_embedding(id);
+					// await search();
 				});
 
 				peer.on('call', (c) => {
@@ -61,12 +50,12 @@
 		peer
 			.call(id, local_stream)
 			.on('stream', async (s) => {
+				console.log('remote stream');
 				remote_stream = s;
-				console.log('added remote_stream');
 				searching = false;
 			})
 			.on('close', async () => {
-				console.log('call closed');
+				console.log('remote closed')
 				await search();
 			})
 			.on('error', async (e) => {
@@ -82,15 +71,17 @@
 	const search = async () => {
 		searching = true;
 		if (!may_search) return;
+		console.log(namespace)
 		await axios
 			.post('/pinecone', {
 				act: 'query',
 				arg: {
-					queryRequest: { topK: 2, id: peer.id, includeValues: true, namespace }
+					queryRequest: { topK: 2, id: peer.id, namespace }
 				}
 			})
 			.then(async ({ data }) => {
 				let target = '';
+				console.log(data)
 				if (!data.matches.length) return alert('no one available');
 				if (data.matches[0].id === peer.id) {
 					if (data.matches.length > 1) {
@@ -101,48 +92,88 @@
 				} else {
 					target = data.matches[0].id;
 				}
-				await axios.post('/pinecone', {
-					act: 'update',
-					arg: {
-						updateRequest: {
-							id: self_id,
-							setMetadata: {
-								target
-							},
-							namespace
-						}
-					}
-				});
-				await axios
-					.post('/pinecone', {
-						act: 'query',
-						arg: {
-							queryRequest: {
-								topK: 1,
-								filter: {
-									target: self_id
-								}
-							}
-						}
-					})
-					.then(({ data }) => {
-						if (!data.matches.length) return;
-						call(data.matches[0].id);
-					});
+				console.log(`target is ${target}`);
+				call(target)
+			// 	await axios.post('/pinecone', {
+			// 		act: 'update',
+			// 		arg: {
+			// 			updateRequest: {
+			// 				id: peer.id,
+			// 				setMetadata: {
+			// 					target
+			// 				},
+			// 				namespace
+			// 			}
+			// 		}
+			// 	});
+			// 	let id = await get_my_seeker();
+			// 	if (id) call(id);
 			})
 			.finally(() => (searching = false));
+	};
+
+	// const get_my_seeker = (): Promise<string> => {
+	// 	return axios
+	// 		.post('/pinecone', {
+	// 			act: 'query',
+	// 			arg: {
+	// 				queryRequest: {
+	// 					topK: 1,
+	// 					filter: {
+	// 						target: peer.id
+	// 					},
+	// 					id: peer.id
+	// 				}
+	// 			}
+	// 		})
+	// 		.then(({ data }) => (data.matches.length ? data.matches[0].id : null));
+	// };
+
+	const update_embedding = async (id: string) => {
+		return axios
+			.post('/pinecone', {
+				act: 'update',
+				arg: { updateRequest: { id, values: await embedding(), namespace } }
+			})
+			// .then(async () => {
+			// 	await get_my_seeker().then(async (id) => {
+			// 		if (id) {
+			// 			let seeker_match = await axios
+			// 				.post('/pinecone', {
+			// 					act: 'query',
+			// 					arg: {
+			// 						queryRequest: {
+			// 							topK: 1,
+			// 							id: id,
+			// 							namespace
+			// 						}
+			// 					}
+			// 				})
+			// 				.then(({ data }) => (data.matches.length ? data.matches[0].id : null));
+			// 			if (seeker_match) {
+			// 				await axios.post('/pinecone', {
+			// 					act: 'update',
+			// 					arg: {
+			// 						updateRequest: {
+			// 							id,
+			// 							setMetadata: {
+			// 								target: seeker_match
+			// 							},
+			// 							namespace
+			// 						}
+			// 					}
+			// 				});
+			// 			}
+			// 		}
+			// 	});
+			// });
 	};
 
 	const description_change = async () => {
 		may_search = false;
 		updating = true;
 
-		// edit id in pinecone with description embedding
-		await axios
-			.post('/pinecone', {
-				act: 'update',
-				arg: { updateRequest: { id: self_id, values: await embedding(), namespace: 'call' } }
-			})
+		await update_embedding(peer.id)
 			.then(async () => {
 				updating = false;
 				console.log('updated description');
