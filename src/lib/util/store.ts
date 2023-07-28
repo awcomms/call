@@ -81,16 +81,12 @@ export const objectStore = (key = '', initialValue: object) => {
 	return s;
 };
 
-export const typeStore = <Type>(key = '', initialValue: Type) => {
+export const typeStore = <Type>(key = '', initialValue: Type, resolve: (v: string) => Type) => {
 	let previousValue: Type;
 	if (browser) {
 		const fromLocalStorage = localStorage.getItem(key);
 		if (fromLocalStorage) {
-			try {
-				previousValue = JSON.parse(fromLocalStorage);
-			} catch {
-				previousValue = fromLocalStorage;
-			}
+			previousValue = resolve(fromLocalStorage)
 		} else {
 			previousValue = initialValue;
 		}

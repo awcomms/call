@@ -5,9 +5,6 @@ import axios from 'axios';
 import {empty_string_embedding} from '$lib//constants';
 import type Peer from 'peerjs';
 
-export const theme_key = '__carbon-theme';
-export const theme = typeStore<CarbonTheme>(theme_key, 'g100');
-
 export const loginOpen = booleanStore('loginOpen');
 
 export const previousPage = stringStore('previousPage', '/');

@@ -1,13 +1,13 @@
-<script>
+<script lang='ts'>
 	import { Content, Grid, Theme } from 'carbon-components-svelte';
 	import 'carbon-components-svelte/css/all.css';
 	import { browser } from '$app/environment';
 	import { Header } from '$lib/components/Nav';
-	import { theme, theme_key } from '$lib/stores';
 	import { onMount } from 'svelte';
 	import { dev } from '$app/environment';
 	import { inject } from '@vercel/analytics';
-	
+	import { theme, theme_key } from '$lib/theme_store';
+
 	inject({ mode: dev ? 'development' : 'production' });
 
 	if (browser && navigator && navigator.serviceWorker)

@@ -10,7 +10,7 @@
 	} from 'carbon-components-svelte';
 	import Sun from 'carbon-icons-svelte/lib/Sun.svelte';
 	import Moon from 'carbon-icons-svelte/lib/Moon.svelte';
-	import { theme } from '$lib/stores';
+	import { theme } from '$lib/theme_store';
 
 	$: isOpen = false;
 	$: icon = $theme === 'g100' ? Sun : Moon;
