@@ -9,7 +9,7 @@ interface ReturnType<T> {
 	documents: T[];
 }
 
-type Search = { text?: string; v?: any };
+type Search = { text?: string; v?: string[] };
 
 export const search = async <T>({
 	index,

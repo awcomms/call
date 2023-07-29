@@ -1,6 +1,7 @@
 import { client } from '$lib/util/redis';
-import { v_blob } from '$lib/util/v_blob';
+import { embedding_model } from '$lib/constants';
 import type { RequestHandler } from './$types';
+import { openai } from '$lib/openai';
 
 export const DELETE: RequestHandler = async ({ params }) => {
 	await client.del(params.id);
@@ -8,6 +9,13 @@ export const DELETE: RequestHandler = async ({ params }) => {
 };
 
 export const PUT: RequestHandler = async ({ params, request }) => {
-	await client.hSet(params.id, { ...(await v_blob(await request.json())) });
+	await client.json.set(
+		params.id,
+		'$',
+		await openai.
+		createEmbedding({ model: embedding_model, input: JSON.stringify(await request.json()) }).then((r) => {
+			return r.data.data[0].embedding;
+		})
+	);
 	return new Response(null, { status: 200 });
 };

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button, ButtonSet, Column, Modal, Row, TextInput } from 'carbon-components-svelte';
+	import { Button, ButtonSet, Column, Modal, Row, TextArea } from 'carbon-components-svelte';
 	import axios from 'axios';
 	import type Peer from 'peerjs';
 	import { onMount } from 'svelte';
@@ -104,8 +104,8 @@
 			})
 			.catch((e) => {
 				console.log(e);
-				setTimeout(description_change, 3000);
-				alert('encountered error updating embedding, retrying in about 3 seconds');
+				// setTimeout(description_change, 3000);
+				alert('encountered error updating embedding');
 			})
 			.finally(() => {
 				updating = false;
@@ -114,7 +114,7 @@
 </script>
 
 <Modal bind:open={description_open} passiveModal modalHeading="edit description">
-	<TextInput bind:value={$description} labelText="Description" />
+	<TextArea rows={7} bind:value={$description} labelText="Description" />
 	<Button
 		on:click={() => {
 			description_open = false;

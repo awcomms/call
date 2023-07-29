@@ -7,7 +7,7 @@ export const v_blob = async (data: object) => {
 		.createEmbedding({ model: embedding_model, input: JSON.stringify(data) })
 		.then((r) => {
 			return r.data.data[0].embedding;
-		});h
+		});
 	const blob = float32Buffer(v);
 	return { v: blob, ...data };
 };
