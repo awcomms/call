@@ -71,16 +71,8 @@
 			})
 			.then(async ({ data }) => {
 				console.log(data);
-				if (!data.length) return search();
-				if (data[0].id === peer.id) {
-					if (data.length > 1) {
-						target = data[1].id;
-					} else {
-						return search();
-					}
-				} else {
-					target = data[0].id;
-				}
+				if (!data) return search();
+				target = data
 				console.log(`target is ${target}`);
 				call(target);
 			})
@@ -99,22 +91,21 @@
 
 		await update(peer.id)
 			.then(() => {
-				may_search = true;
 				search();
 			})
 			.catch((e) => {
 				console.log(e);
-				// setTimeout(description_change, 3000);
 				alert('encountered error updating embedding');
 			})
 			.finally(() => {
+				may_search = true;
 				updating = false;
 			});
 	};
 </script>
 
 <Modal bind:open={description_open} passiveModal modalHeading="edit description">
-	<TextArea rows={7} bind:value={$description} labelText="Description" />
+	<TextArea disabled={updating} rows={7} bind:value={$description} labelText="Description" />
 	<Button
 		on:click={() => {
 			description_open = false;
@@ -159,8 +150,14 @@
 	</Column>
 </Row>
 
-<style lang="scss">
-	.video_container {
-		height: 370px;
-	}
+<style lang="sass">
+	.videos
+		display: flex
+		flex-direction: column
+		max-height: 67vh
+	.video_container
+		max-height: 50%
+	video
+		max-inline-size: auto
+		max-block-size: 100%
 </style>
