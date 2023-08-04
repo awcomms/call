@@ -4,5 +4,7 @@
 
 </script>
 <Layout platformName="vidchat" company=''>
-	<slot name='content-grid' />
+	<svelte:fragment slot="content-grid">
+		<slot />
+	</svelte:fragment>
 </Layout>
