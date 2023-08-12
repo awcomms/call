@@ -23,7 +23,7 @@
 		target: string,
 		editing = false,
 		searching = false,
-		show_user_similarity = false,
+		show_similarity = false,
 		remote_stream_ref: HTMLVideoElement,
 		local_stream_ref: HTMLVideoElement,
 		similarity_error = false,
@@ -73,12 +73,16 @@
 					}
 					c.answer(stream);
 					c.on('stream', (s) => {
+						console.log('received stream', s.id)
 						remote_stream = s;
 					});
 					last_used_description = $description;
-					similarity = await axios
+					await axios
 						.post(`/users/${peer.id}/similarity`, $description)
-						.then((r) => r.data)
+						.then((r) => {
+							similarity = r.data;
+							console.log('similarity', similarity);
+						})
 						.catch(() => (similarity_error = true));
 				});
 			});
@@ -104,14 +108,14 @@
 				params: { id: peer.id }
 			})
 			.then(async ({ data }) => {
-				if (data.no_description) {
-					description_open = true;
-					return;
-				}
-				if (data.no_users) {
-					notify({ kind: 'info', title: 'There seem to be currently no users to match with' });
-					return;
-				}
+				// if (data.no_description) {
+				// 	description_open = true;
+				// 	return;
+				// }
+				// if (data.no_users) {
+				// 	notify({ kind: 'info', title: 'There seem to be currently no users to match with' });
+				// 	return;
+				// }
 				console.log(data);
 				// if (!data) return await search();
 				target = data;
@@ -129,10 +133,24 @@
 					await search();
 				});
 				call.on('error', async (e) => {
-					notify({kind: 'error', title: 'Error while tring to connect with found user', subtitle: e.toString()})
+					notify({
+						kind: 'error',
+						title: 'Error while tring to connect with found user',
+						subtitle: e.toString()
+					});
 					console.log(`encountered an error: ${e}`);
 				});
 				return;
+			})
+			.catch((e) => {
+				switch (e.response.data.message) {
+					case 'no_description':
+						notify({kind: 'warning', title: 'Set a description'})
+						description_open = true
+						break
+					case 'no_users':
+						notify({kind: 'info', title: 'There seem to be no other users online'})
+				}
 			})
 			.finally(() => (searching = false));
 	};
@@ -161,7 +179,7 @@
 	};
 </script>
 
-<Modal bind:open={show_user_similarity} passiveModal modalHeading="Similarity between descriptions">
+<Modal bind:open={show_similarity} passiveModal modalHeading="Similarity between descriptions">
 	<p>{similarity}</p>
 </Modal>
 
@@ -199,15 +217,12 @@
 							on:click={search}>{searching ? 'stop searching' : 'search'}</Button
 						>
 						{#if remote_stream && similarity}
-							<Button on:click={() => show_user_similarity}>Show User similarity</Button>
+							<Button on:click={() => show_similarity}>user similarity</Button>
 						{/if}
 					</ButtonSet>
 				</div>
 				<div class="videos">
 					{#if remote_stream}
-						{#if similarity}
-							<p>{similarity}</p>
-						{/if}
 						<div class="video_container">
 							<video autoplay={true} bind:this={remote_stream_ref} />
 						</div>
