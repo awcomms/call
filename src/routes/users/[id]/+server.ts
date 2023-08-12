@@ -9,7 +9,7 @@ export const DELETE: RequestHandler = async ({ params }) => {
 		console.error(e);
 		throw error(500);
 	}).then(res => {
-		// console.log(`redis del ${params.id} res`, res)
+		console.log(`redis del ${params.id} res`, res)
 		return new Response(null, { status: 200 });
 
 	});

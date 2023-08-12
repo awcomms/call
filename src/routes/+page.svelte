@@ -51,11 +51,12 @@
 						await update(id).then(() => (may_search = true)).catch((e) => notify({kind: 'error', title: 'Error while updating description', subtitle: e}));
 				});
 
-				peer.on('error', async (e) => {
+				peer.on('error', (e) => {
 					const error = e.toString();
 					console.error('peer error:', error);
 					if (error.includes(target)) {
-						del(target).then(async () => await search());
+						del(target)
+						search()
 					}
 				});
 
@@ -86,9 +87,10 @@
 
 	const search = async () => {
 		if (searching) {
-			may_search = false;
+			// may_search = false;
 			return;
 		}
+		console.log('searching')
 		if (!may_search) return;
 		searching = true;
 		await axios
@@ -210,12 +212,12 @@
 	.all
 		min-height: calc(100vh - 3rem)
 	.videos
-		max-width: 100%
+		// max-width: 100%
 		display: flex
 		flex-direction: column
 		max-height: 67vh
 	.video_container
-		max-width: 100%
+		// max-width: 100%
 		max-height: 50%
 	video
 		max-inline-size: auto
