@@ -201,7 +201,7 @@
 					{#if local_stream}
 						<div class="video_container">
 							<video muted autoplay={true} bind:this={local_stream_ref} />
-							<video muted autoplay={true} bind:this={remote_stream_ref} />
+							<video autoplay={true} bind:this={remote_stream_ref} />
 						</div>
 					{/if}
 				</div>
