@@ -23,6 +23,7 @@
 		target: string,
 		editing = false,
 		searching = false,
+		show_user_similarity = false,
 		remote_stream_ref: HTMLVideoElement,
 		local_stream_ref: HTMLVideoElement,
 		similarity_error = false,
@@ -34,6 +35,7 @@
 
 	$: if (remote_stream_ref && remote_stream) remote_stream_ref.srcObject = remote_stream;
 	$: if (local_stream_ref && local_stream) local_stream_ref.srcObject = local_stream;
+	$: may_search = !editing && !searching;
 
 	onDestroy(async () => {
 		if (peer?.id) await del(peer.id);
@@ -123,6 +125,7 @@
 				});
 				call.on('close', async () => {
 					console.log('remote closed');
+					may_search = true;
 					await search();
 				});
 				return;
@@ -145,11 +148,11 @@
 		await update(peer.id)
 			.then(async () => {
 				// await search();
+				notify('description updated');
 			})
 			.catch((e) => {
 				console.log(e);
-				// notify
-				alert('encountered error while editiing');
+				notify({ kind: 'error', title: 'Error while updating description', subtitle: e });
 			})
 			.finally(() => {
 				// may_search = true;
@@ -158,8 +161,12 @@
 	};
 </script>
 
+<Modal bind:open={show_user_similarity} passiveModal modalHeading="Similarity between descriptions">
+	<p>{similarity}</p>
+</Modal>
+
 <Modal bind:open={description_open} passiveModal hasForm modalHeading="edit description">
-	<p>The description will be used to match you to a similar user</p>
+	<p>The description will be used to match you to a user with a similar description</p>
 	<TextArea disabled={editing} rows={7} bind:value={$description} labelText="Description" />
 	<Button
 		disabled={editing}
@@ -175,33 +182,39 @@
 	<Row>
 		<Column>
 			<div class="container">
-				{#if may_edit}
-					<div class="controls">
-						<ButtonSet stacked>
+				<div class="controls">
+					<ButtonSet stacked>
+						{#if may_edit}
 							<Button
+								size="small"
 								disabled={editing}
 								icon={editing ? InlineLoading : Edit}
 								on:click={() => (description_open = true)}>edit description</Button
 							>
-							<Button disabled={editing} icon={searching ? InlineLoading : Search} on:click={search}
-								>{searching ? 'stop searching' : 'search'}</Button
-							>
-						</ButtonSet>
-					</div>
-				{/if}
+						{/if}
+						<Button
+							size="small"
+							disabled={editing}
+							icon={searching ? InlineLoading : Search}
+							on:click={search}>{searching ? 'stop searching' : 'search'}</Button
+						>
+						{#if remote_stream && similarity}
+								<Button on:click={() => show_user_similarity}>Show User similarity</Button>
+						{/if}
+					</ButtonSet>
+				</div>
 				<div class="videos">
 					{#if remote_stream}
 						{#if similarity}
 							<p>{similarity}</p>
 						{/if}
 						<div class="video_container">
-							<video muted={false} autoplay={true} bind:this={remote_stream_ref} />
+							<video autoplay={true} bind:this={remote_stream_ref} />
 						</div>
 					{/if}
 					{#if local_stream}
 						<div class="video_container">
 							<video muted autoplay={true} bind:this={local_stream_ref} />
-							<video autoplay={true} bind:this={remote_stream_ref} />
 						</div>
 					{/if}
 				</div>

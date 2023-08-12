@@ -22,7 +22,7 @@ export const POST: RequestHandler = async ({ request, params }) => {
 				messages: [
 					{
 						role: 'user',
-						content: `The following are descriptions of 2 users of an online video chat platform. Highlight the most prominent similarities between the users.
+						content: `The following are descriptions of 2 users of an online video chat platform. Highlight the most prominent similarities between the descriptions.
 				\\n\\n***FIRST_USER_DESCRIPTION***\\n${local_input}\\n***FIRST_USER_DESCRIPTION_END***
 				\\n\\n***SECOND_USER_DESCRIPTION***\\n${remote_input}\\n***SECOND_USER_DESCRIPTION_END***`
 					}
@@ -30,7 +30,7 @@ export const POST: RequestHandler = async ({ request, params }) => {
 			})
 			.then((r) => {
 				// if (!r.data.choices.length || !r.data.choices[0].message) throw error(500, 'Unexpected result while getting description similarity') //TODO response
-				return r.data.choices[0].message?.content || '';
+				return r.data.choices[0].message?.content ?? '';
 			})
 	);
 };

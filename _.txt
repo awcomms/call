@@ -6,3 +6,9 @@ search
 
 search Button
     disabled if editing
+
+TODO
+    persistent toast notification if no internet access
+    onmount update error, specifying if no internet access
+
+    edit and search disabled if no internet access
