@@ -94,8 +94,8 @@
 			// may_search = false;
 			return;
 		}
-		console.log('searching');
-		if (!may_search) return;
+		// console.log('searching');
+		// if (!may_search) return;
 		searching = true;
 		await axios
 			.get('/users/search', {
