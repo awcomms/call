@@ -47,16 +47,20 @@
 				peer.on('open', async (id) => {
 					console.log(`your peerjs id is ${id}`);
 					may_edit = true;
-					if ($description) 
-						await update(id).then(() => (may_search = true)).catch((e) => notify({kind: 'error', title: 'Error while updating description', subtitle: e}));
+					if ($description)
+						await update(id)
+							.then(() => (may_search = true))
+							.catch((e) =>
+								notify({ kind: 'error', title: 'Error while updating description', subtitle: e })
+							);
 				});
 
 				peer.on('error', (e) => {
 					const error = e.toString();
 					console.error('peer error:', error);
 					if (error.includes(target)) {
-						del(target)
-						search()
+						del(target);
+						search();
 					}
 				});
 
@@ -90,7 +94,7 @@
 			// may_search = false;
 			return;
 		}
-		console.log('searching')
+		console.log('searching');
 		if (!may_search) return;
 		searching = true;
 		await axios
@@ -121,7 +125,7 @@
 					console.log('remote closed');
 					await search();
 				});
-				return
+				return;
 				// call.on('error', async (e) => {
 				// 	console.log(`encountered an error: ${JSON.stringify(e)}, deleting {$target}`);
 				// 	// search();
@@ -131,7 +135,7 @@
 	};
 
 	const update = async (id: string) => {
-		console.log('update id', id)
+		console.log('update id', id);
 		await axios.put(`/users/${id}`, $description);
 	};
 
@@ -155,10 +159,7 @@
 </script>
 
 <Modal bind:open={description_open} passiveModal hasForm modalHeading="edit description">
-	<p>
-		Really describe yourself. Your ambitions, hobbies, personality, whatever, so you will be matched
-		to a similar user
-	</p>
+	<p>The description will be used to match you to a similar user</p>
 	<TextArea disabled={editing} rows={7} bind:value={$description} labelText="Description" />
 	<Button
 		disabled={editing}
