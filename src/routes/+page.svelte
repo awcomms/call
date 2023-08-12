@@ -128,11 +128,11 @@
 					may_search = true;
 					await search();
 				});
+				call.on('error', async (e) => {
+					notify({kind: 'error', title: 'Error while tring to connect with found user', subtitle: e.toString()})
+					console.log(`encountered an error: ${e}`);
+				});
 				return;
-				// call.on('error', async (e) => {
-				// 	console.log(`encountered an error: ${JSON.stringify(e)}, deleting {$target}`);
-				// 	// search();
-				// });
 			})
 			.finally(() => (searching = false));
 	};
@@ -199,7 +199,7 @@
 							on:click={search}>{searching ? 'stop searching' : 'search'}</Button
 						>
 						{#if remote_stream && similarity}
-								<Button on:click={() => show_user_similarity}>Show User similarity</Button>
+							<Button on:click={() => show_user_similarity}>Show User similarity</Button>
 						{/if}
 					</ButtonSet>
 				</div>

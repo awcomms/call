@@ -1,14 +1,15 @@
-on mount, update description
-search() // maybe, maybe not
+on mount, update description ✔
 search
-    if searching, return
-    searching = true
+    if searching, return ✔
+    searching = true ✔
 
 search Button
-    disabled if editing
+    disabled if editing ✔
+
+persistent toast notification if no internet access
+onmount update error, specifying if no internet access
+
+edit and search disabled if no internet access
 
 TODO
-    persistent toast notification if no internet access
-    onmount update error, specifying if no internet access
-
-    edit and search disabled if no internet access
+    vercel web analytics
