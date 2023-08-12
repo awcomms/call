@@ -17,7 +17,7 @@ client.on('error', (e) => console.error('redis client error:', e))
 
 try {
 	await client.ft.create(
-		'v',
+		index,
 		{
 			'$.v': {
 				AS: 'v',
