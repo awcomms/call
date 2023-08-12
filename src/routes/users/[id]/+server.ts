@@ -1,23 +1,36 @@
-import { client } from '@edge37/redis-utils';
-import { embedding_model } from '$lib/constants';
+import { embedding_model, PREFIX } from '$lib/constants';
 import type { RequestHandler } from './$types';
 import { openai } from '$lib/openai';
+import { client } from '$lib/redis';
+import { error } from '@sveltejs/kit';
 
 export const DELETE: RequestHandler = async ({ params }) => {
-	global.client = await client.connect();
-	await global.client.del(params.id);
+	await client.del(params.id).catch((e) => {
+		console.error(e);
+		throw error(500);
+	});
 	return new Response(null, { status: 200 });
 };
 
 export const PUT: RequestHandler = async ({ params, request }) => {
-	await global.client.json.set(
-		params.id,
-		'$',
-		await openai
-			.createEmbedding({ model: embedding_model, input: JSON.stringify(await request.json()) })
-			.then((r) => {
-				return r.data.data[0].embedding;
-			})
-	);
+	const input = await request.text();
+	console.log('i_set', input);
+	await client.json
+		.set(PREFIX.concat(params.id), '$', {
+			v: await openai
+				.createEmbedding({ model: embedding_model, input })
+				.then((r) => {
+					return r.data.data[0].embedding;
+				})
+				.catch((e) => {
+					console.error(e);
+					throw error(500);
+				}),
+			input
+		})
+		.catch((e) => {
+			console.error(e);
+			throw error(500);
+		});
 	return new Response(null, { status: 200 });
 };
