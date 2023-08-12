@@ -13,3 +13,4 @@ edit and search disabled if no internet access
 
 TODO
     vercel web analytics
+    notify user when other stream goes offline
