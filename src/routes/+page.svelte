@@ -215,12 +215,12 @@
 		// max-width: 100%
 		display: flex
 		flex-direction: column
-		max-height: 67vh
 	.video_container
 		// max-width: 100%
 		max-height: 50%
 	video
 		max-inline-size: auto
 		max-width: 100%
-		max-block-size: 100%
+		max-height: calc((100vh - 13rem) / 2)
+		// max-block-size: 100%
 </style>

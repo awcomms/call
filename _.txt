@@ -1,0 +1,8 @@
+on mount, update description
+search() // maybe, maybe not
+search
+    if searching, return
+    searching = true
+
+search Button
+    disabled if editing
