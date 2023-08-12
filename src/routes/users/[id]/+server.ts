@@ -5,11 +5,14 @@ import { client } from '$lib/redis';
 import { error } from '@sveltejs/kit';
 
 export const DELETE: RequestHandler = async ({ params }) => {
-	await client.del(params.id).catch((e) => {
+	return client.del(PREFIX.concat(params.id)).catch((e) => {
 		console.error(e);
 		throw error(500);
+	}).then(res => {
+		// console.log(`redis del ${params.id} res`, res)
+		return new Response(null, { status: 200 });
+
 	});
-	return new Response(null, { status: 200 });
 };
 
 export const PUT: RequestHandler = async ({ params, request }) => {

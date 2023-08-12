@@ -13,7 +13,7 @@ export const client = createClient({
 await client.connect().catch((e) => console.error('redis client.connect', e));
 client.on('error', (e) => console.error('redis client error:', e))
 
-await client.flushAll()
+// await client.flushAll()
 
 try {
 	await client.ft.create(

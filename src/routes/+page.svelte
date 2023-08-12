@@ -60,7 +60,7 @@
 				});
 
 				peer.on('call', async (c) => {
-					if (c.peer !== target) {
+					if (target && c.peer !== target) {
 						c.close();
 						return; //TODO - do we need to return after closing call?
 					}
@@ -110,7 +110,6 @@
 				console.log(`target is ${target}`);
 
 				console.log(`calling ${target}`);
-				// await del(target);
 				let call = peer.call(target, local_stream);
 				call.on('stream', (s) => {
 					console.log('remote stream');
@@ -120,6 +119,7 @@
 					console.log('remote closed');
 					await search();
 				});
+				return
 				// call.on('error', async (e) => {
 				// 	console.log(`encountered an error: ${JSON.stringify(e)}, deleting {$target}`);
 				// 	// search();
@@ -168,50 +168,57 @@
 	>
 </Modal>
 
-<Row>
-	<Column>
-		<div class="container">
-			{#if may_edit}
-				<div class="controls">
-					<ButtonSet stacked>
-						<Button
-							disabled={editing}
-							icon={editing ? InlineLoading : Edit}
-							on:click={() => (description_open = true)}>edit description</Button
-						>
-						<Button disabled={editing} icon={searching ? InlineLoading : Search} on:click={search}
-							>{searching ? 'stop searching' : 'search'}</Button
-						>
-					</ButtonSet>
-				</div>
-			{/if}
-			<div class="videos">
-				{#if remote_stream}
-					{#if similarity}
-						<p>{similarity}</p>
+<div class="all">
+	<Row>
+		<Column>
+			<div class="container">
+				{#if may_edit}
+					<div class="controls">
+						<ButtonSet stacked>
+							<Button
+								disabled={editing}
+								icon={editing ? InlineLoading : Edit}
+								on:click={() => (description_open = true)}>edit description</Button
+							>
+							<Button disabled={editing} icon={searching ? InlineLoading : Search} on:click={search}
+								>{searching ? 'stop searching' : 'search'}</Button
+							>
+						</ButtonSet>
+					</div>
+				{/if}
+				<div class="videos">
+					{#if remote_stream}
+						{#if similarity}
+							<p>{similarity}</p>
+						{/if}
+						<div class="video_container">
+							<video muted={false} autoplay={true} bind:this={remote_stream_ref} />
+						</div>
 					{/if}
-					<div class="video_container">
-						<video muted={false} autoplay={true} bind:this={remote_stream_ref} />
-					</div>
-				{/if}
-				{#if local_stream}
-					<div class="video_container">
-						<video autoplay={true} bind:this={local_stream_ref} />
-					</div>
-				{/if}
+					{#if local_stream}
+						<div class="video_container">
+							<video autoplay={true} bind:this={local_stream_ref} />
+						</div>
+					{/if}
+				</div>
 			</div>
-		</div>
-	</Column>
-</Row>
+		</Column>
+	</Row>
+</div>
 
 <style lang="sass">
+	.all
+		min-height: calc(100vh - 3rem)
 	.videos
+		max-width: 100%
 		display: flex
 		flex-direction: column
 		max-height: 67vh
 	.video_container
+		max-width: 100%
 		max-height: 50%
 	video
 		max-inline-size: auto
+		max-width: 100%
 		max-block-size: 100%
 </style>

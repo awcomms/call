@@ -8,6 +8,16 @@
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-prefetch>
-		<div>%sveltekit.body%</div>
+		<div id="main-div" >%sveltekit.body%</div>
 	</body>
 </html>
+
+<style>
+	body {
+		min-height: calc(100vh - 3rem);
+	}
+	#main-div {
+		/* display: contents; */
+		min-height: 100%;
+	}
+</style>
