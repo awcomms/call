@@ -14,8 +14,8 @@
 	import axios from 'axios';
 	import type Peer from 'peerjs';
 	import { onDestroy, onMount } from 'svelte';
-	import { description } from '$lib/stores';
-	import { notify } from 'sveltekit-carbon-utils';
+	import { description, offline } from '$lib/stores';
+	import { notify, stringStore } from 'sveltekit-carbon-utils';
 	import Video from '$lib/Video.svelte';
 
 	let description_open = false,
@@ -29,9 +29,9 @@
 		remote_stream_ref: HTMLVideoElement,
 		local_stream_ref: HTMLVideoElement,
 		similarity_error = false,
-		last_used_description = '',
+		// last_used_description = '',
+		old_description = stringStore('old_description'),
 		similarity = '',
-		may_edit = false,
 		may_search = false,
 		peer: Peer;
 
@@ -55,9 +55,8 @@
 				peer = new Peer();
 				peer.on('open', async (id) => {
 					console.log(`your peerjs id is ${id}`);
-					may_edit = true;
 					if ($description)
-						await update(id)
+						await update(id, $description)
 							.then(() => (may_search = true))
 							.catch((e) =>
 								notify({ kind: 'error', title: 'Error while updating description', subtitle: e })
@@ -67,8 +66,8 @@
 				peer.on('error', async (e) => {
 					const error = e.toString();
 					console.error('peer error:', error);
-					if (error.includes(target)) {
-						await del(target); //.then(() => just_deleted = target);
+					if (error.includes(target) && target !== just_deleted) {
+						await del(target).then(() => (just_deleted = target));
 						await search();
 					}
 				});
@@ -80,10 +79,10 @@
 					}
 					c.answer(stream);
 					c.on('stream', (s) => {
-						console.log('received stream');
+						// console.log('received stream');
 						remote_stream = s;
 					});
-					last_used_description = $description;
+					// last_used_description = $description;
 					// await axios
 					// 	.post(`/users/${peer.id}/similarity`, $description)
 					// 	.then((r) => {
@@ -125,12 +124,12 @@
 					notify({ kind: 'info', title: 'There seem to be currently no users to match with' });
 					return;
 				}
-				console.log(data);
+				// console.log(data);
 				// if (!data) return await search();
 				target = data;
-				console.log(`target is ${target}`);
+				// console.log(`target is ${target}`);
 
-				console.log(`calling ${target}`);
+				// console.log(`calling ${target}`);
 				let call = peer.call(target, local_stream);
 				call.on('stream', (s) => {
 					remote_stream = s;
@@ -156,15 +155,15 @@
 			.finally(() => (searching = false));
 	};
 
-	const update = async (id: string) => {
+	const update = async (id: string, text: string) => {
 		console.log('update id', id);
-		await axios.put(`/users/${id}`, $description);
+		await axios.put(`/users/${id}`, text);
 	};
 
-	const change_description = async () => {
+	const change_description = async (text: string) => {
 		editing = true;
 
-		await update(peer.id)
+		await update(peer.id, text)
 			.then(async () => {
 				// await search();
 				notify('description updated');
@@ -180,46 +179,54 @@
 	};
 </script>
 
-<Modal bind:open={show_similarity} passiveModal modalHeading="Similarity between descriptions">
+<!-- <Modal bind:open={show_similarity} passiveModal modalHeading="Similarity between descriptions">
 	<p>{similarity}</p>
-</Modal>
+</Modal> -->
 
-<Modal bind:open={description_open} passiveModal hasForm modalHeading="edit description">
-	<p>The description will be used to match you to a user with a similar description</p>
-	<TextArea disabled={editing} rows={7} bind:value={$description} labelText="Description" />
-	<Button
+<Modal
+	on:submit={async () => {
+		$description = $old_description;
+		description_open = false;
+		await change_description($description);
+	}}
+	primaryButtonDisabled={editing}
+	primaryButtonIcon={editing ? InlineLoading : Checkmark}
+	primaryButtonText="Save"
+	on:click:button--secondary={() => (description_open = false)}
+	bind:open={description_open}
+	hasForm
+	modalHeading="edit description"
+>
+	<p>the description will be used to match you to a user with a similar description</p>
+	<TextArea
 		disabled={editing}
-		icon={editing ? InlineLoading : Checkmark}
-		on:click={async () => {
-			description_open = false;
-			await change_description();
-		}}>Set</Button
-	>
+		rows={7}
+		bind:value={$old_description}
+		labelText="description{$description === $old_description ? '' : ' (unsaved)'}"
+	/>
 </Modal>
 
 <Row>
 	<Column>
 		<div class="controls">
 			<ButtonSet>
-				{#if may_edit}
+				{#if peer?.id && !$offline}
 					<Button
 						iconDescription="edit"
-						size="small"
 						disabled={editing}
 						icon={editing ? InlineLoading : Edit}
 						on:click={() => (description_open = true)}
 					/>
+					<Button
+						iconDescription="search"
+						disabled={editing}
+						icon={searching ? InlineLoading : Search}
+						on:click={search}
+					/>
+					<!-- {#if remote_stream && similarity}
+						<Button on:click={() => show_similarity}>user similarity</Button>
+					{/if} -->
 				{/if}
-				<Button
-					iconDescription="search"
-					size="small"
-					disabled={editing}
-					icon={searching ? InlineLoading : Search}
-					on:click={search}
-				/>
-				<!-- {#if remote_stream && similarity}
-					<Button on:click={() => show_similarity}>user similarity</Button>
-				{/if} -->
 			</ButtonSet>
 		</div>
 		<div class="videos">
@@ -232,8 +239,9 @@
 <style lang="sass">
 	.controls
 		display: flex
+		min-height: 3rem
 	.videos
 		display: grid
 		grid-template-columns: 1fr
-		grid-template-rows: calc((100vh - 8rem) / 2) calc((100vh - 8rem) / 2)
+		grid-template-rows: calc((100vh - 10rem) / 2) calc((100vh - 10rem) / 2)
 </style>

@@ -6,10 +6,10 @@
 	import VideoOff from 'carbon-icons-svelte/lib/VideoOff.svelte';
 
 	export let ref: HTMLVideoElement | undefined = undefined,
-		stream: MediaStream,
-        audio: MediaStreamTrack,
-        video: MediaStreamTrack,
-		remote = false;
+		remote = false,
+		stream: MediaStream;
+	let audio: MediaStreamTrack,
+		video: MediaStreamTrack;
 
 	const mute = () => {
 		if (!audio) return;
@@ -32,13 +32,13 @@
 	};
 
 	const stream_update = (stream: MediaStream) => {
-        if (!stream) return
+		if (!stream) return;
 		if (ref) ref.srcObject = stream;
-		audio = stream.getAudioTracks()[0]
-		video = stream.getVideoTracks()[0]
+		audio = stream.getAudioTracks()[0];
+		video = stream.getVideoTracks()[0];
 	};
 
-	$: stream_update(stream)
+	$: stream_update(stream);
 </script>
 
 <div class="all" class:remote class:local={!remote}>
@@ -80,10 +80,6 @@
 	{/if}
 </div>
 
-<!-- 
-
- -->
-
 <style lang="scss">
 	@use '@carbon/layout';
 	.all {
@@ -103,16 +99,13 @@
 		grid-row: 2 / 3;
 	}
 
-	.indicator {
-		padding: layout.$spacing-03;
-	}
-	.div {
-		max-block-size: 100%;
-	}
+	// .indicator {
+	// 	padding: layout.$spacing-03;
+	// }
 	video {
 		/* max-height: calc((100vh - 13rem) / 2); */
 		/* max-width: 100vh; */
 		max-inline-size: 100%;
-		max-block-size: calc((100vh - 8rem) / 2);
+		max-block-size: calc((100vh - 10rem) / 2);
 	}
 </style>

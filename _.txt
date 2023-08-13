@@ -6,13 +6,11 @@ search
 search Button
     disabled if editing ✔
 
-persistent toast notification if no internet access
 onmount update error, specifying if no internet access
-
 edit and search disabled if no internet access
 
 TODO
+    can I put %sveltekit.body% directly in body?
     settings
         search on description change
-    on description modal close
     notify user when other stream goes offline

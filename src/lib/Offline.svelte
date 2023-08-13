@@ -16,7 +16,3 @@
 		});
 	});
 </script>
-
-{#if $offline}
-	<InlineNotification hideCloseButton title="Offline" kind="error" />
-{/if}
