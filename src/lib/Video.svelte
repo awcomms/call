@@ -44,8 +44,8 @@
 <div class="all" class:remote class:local={!remote}>
 	<video muted={!remote} autoplay={true} bind:this={ref} />
 	{#if stream}
-		{#if remote}
-			<div class="icons">
+		{#if !remote}
+			<!-- <div class="icons">
 				<div class="indicator">
 					{#if video?.enabled}
 						<VideoOff />
@@ -61,7 +61,7 @@
 					{/if}
 				</div>
 			</div>
-		{:else}
+		{:else} -->
 			<ButtonSet stacked>
 				<Button
 					iconDescription={`Your video is ${video?.enabled ? 'on' : 'off'}`}
