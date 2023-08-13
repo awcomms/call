@@ -24,14 +24,14 @@ export const GET: RequestHandler = async ({ url }) => {
 			throw error(500);
 		});
 	if (!v) {
-		throw error(404, `no_description`);
+		text(`no_description`);
 	}
 	const results = await search(client, { index, search: v }).catch((e) => {
 		console.error(e);
 		throw error(500);
 	});
 	console.log(results);
-	if (results.total < 2) throw error(404, `no_users`);
+	if (results.total < 2) text(`no_users`);
 	let match = results.documents[0].id === id ? results.documents[1] : results.documents[0];
 	return text(match.id.split(PREFIX)[1]);
 };

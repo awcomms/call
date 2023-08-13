@@ -16,6 +16,7 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { description } from '$lib/stores';
 	import { notify } from 'sveltekit-carbon-utils';
+	import Video from '$lib/Video.svelte';
 
 	let description_open = false,
 		local_stream: MediaStream,
@@ -23,6 +24,7 @@
 		target: string,
 		editing = false,
 		searching = false,
+		just_deleted: string,
 		show_similarity = false,
 		remote_stream_ref: HTMLVideoElement,
 		local_stream_ref: HTMLVideoElement,
@@ -33,7 +35,12 @@
 		may_search = false,
 		peer: Peer;
 
-	$: if (remote_stream_ref && remote_stream) remote_stream_ref.srcObject = remote_stream;
+	$: if (remote_stream_ref && remote_stream) {
+		remote_stream_ref.srcObject = remote_stream;
+		remote_stream.addEventListener('inactive', () => {
+			console.log('remote_stream went inactive, peer id: ', peer.id);
+		});
+	}
 	$: if (local_stream_ref && local_stream) local_stream_ref.srcObject = local_stream;
 	$: may_search = !editing && !searching;
 
@@ -57,12 +64,12 @@
 							);
 				});
 
-				peer.on('error', (e) => {
+				peer.on('error', async (e) => {
 					const error = e.toString();
 					console.error('peer error:', error);
 					if (error.includes(target)) {
-						del(target);
-						search();
+						await del(target); //.then(() => just_deleted = target);
+						await search();
 					}
 				});
 
@@ -73,17 +80,17 @@
 					}
 					c.answer(stream);
 					c.on('stream', (s) => {
-						console.log('received stream', s.id)
+						console.log('received stream');
 						remote_stream = s;
 					});
 					last_used_description = $description;
-					await axios
-						.post(`/users/${peer.id}/similarity`, $description)
-						.then((r) => {
-							similarity = r.data;
-							console.log('similarity', similarity);
-						})
-						.catch(() => (similarity_error = true));
+					// await axios
+					// 	.post(`/users/${peer.id}/similarity`, $description)
+					// 	.then((r) => {
+					// 		similarity = r.data;
+					// 		console.log('similarity', similarity);
+					// 	})
+					// 	.catch(() => (similarity_error = true));
 				});
 			});
 		});
@@ -92,7 +99,9 @@
 	const del = (id: string) =>
 		axios
 			.delete(`users/${id}`)
-			.then(() => console.log(`deleted ${id}`))
+			.then(() => {
+				console.log(`deleted ${id}`);
+			})
 			.catch((e) => console.error(`failed to delete ${id}. error:`, e));
 
 	const search = async () => {
@@ -108,14 +117,14 @@
 				params: { id: peer.id }
 			})
 			.then(async ({ data }) => {
-				// if (data.no_description) {
-				// 	description_open = true;
-				// 	return;
-				// }
-				// if (data.no_users) {
-				// 	notify({ kind: 'info', title: 'There seem to be currently no users to match with' });
-				// 	return;
-				// }
+				if (data === 'no_description') {
+					description_open = true;
+					return;
+				}
+				if (data === 'no_users') {
+					notify({ kind: 'info', title: 'There seem to be currently no users to match with' });
+					return;
+				}
 				console.log(data);
 				// if (!data) return await search();
 				target = data;
@@ -124,7 +133,6 @@
 				console.log(`calling ${target}`);
 				let call = peer.call(target, local_stream);
 				call.on('stream', (s) => {
-					console.log('remote stream');
 					remote_stream = s;
 				});
 				call.on('close', async () => {
@@ -142,15 +150,8 @@
 				});
 				return;
 			})
-			.catch((e) => {
-				switch (e.response.data.message) {
-					case 'no_description':
-						notify({kind: 'warning', title: 'Set a description'})
-						description_open = true
-						break
-					case 'no_users':
-						notify({kind: 'info', title: 'There seem to be no other users online'})
-				}
+			.catch((subtitle) => {
+				notify({ kind: 'error', title: 'Search error', subtitle });
 			})
 			.finally(() => (searching = false));
 	};
@@ -196,61 +197,43 @@
 	>
 </Modal>
 
-<div class="all">
-	<Row>
-		<Column>
-			<div class="container">
-				<div class="controls">
-					<ButtonSet stacked>
-						{#if may_edit}
-							<Button
-								size="small"
-								disabled={editing}
-								icon={editing ? InlineLoading : Edit}
-								on:click={() => (description_open = true)}>edit description</Button
-							>
-						{/if}
-						<Button
-							size="small"
-							disabled={editing}
-							icon={searching ? InlineLoading : Search}
-							on:click={search}>{searching ? 'stop searching' : 'search'}</Button
-						>
-						{#if remote_stream && similarity}
-							<Button on:click={() => show_similarity}>user similarity</Button>
-						{/if}
-					</ButtonSet>
-				</div>
-				<div class="videos">
-					{#if remote_stream}
-						<div class="video_container">
-							<video autoplay={true} bind:this={remote_stream_ref} />
-						</div>
-					{/if}
-					{#if local_stream}
-						<div class="video_container">
-							<video muted autoplay={true} bind:this={local_stream_ref} />
-						</div>
-					{/if}
-				</div>
-			</div>
-		</Column>
-	</Row>
-</div>
+<Row>
+	<Column>
+		<div class="controls">
+			<ButtonSet>
+				{#if may_edit}
+					<Button
+						iconDescription="edit"
+						size="small"
+						disabled={editing}
+						icon={editing ? InlineLoading : Edit}
+						on:click={() => (description_open = true)}
+					/>
+				{/if}
+				<Button
+					iconDescription="search"
+					size="small"
+					disabled={editing}
+					icon={searching ? InlineLoading : Search}
+					on:click={search}
+				/>
+				<!-- {#if remote_stream && similarity}
+					<Button on:click={() => show_similarity}>user similarity</Button>
+				{/if} -->
+			</ButtonSet>
+		</div>
+		<div class="videos">
+			<Video remote stream={remote_stream} />
+			<Video stream={local_stream} />
+		</div>
+	</Column>
+</Row>
 
 <style lang="sass">
-	.all
-		min-height: calc(100vh - 3rem)
-	.videos
-		// max-width: 100%
+	.controls
 		display: flex
-		flex-direction: column
-	.video_container
-		// max-width: 100%
-		max-height: 50%
-	video
-		max-inline-size: auto
-		max-width: 100%
-		max-height: calc((100vh - 13rem) / 2)
-		// max-block-size: 100%
+	.videos
+		display: grid
+		grid-template-columns: 1fr
+		grid-template-rows: calc((100vh - 8rem) / 2) calc((100vh - 8rem) / 2)
 </style>

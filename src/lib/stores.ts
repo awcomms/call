@@ -4,6 +4,7 @@ import type Peer from 'peerjs';
 
 export const peer = writable<Peer>(undefined);
 export const description = stringStore('description', '');
+export const offline = writable(false);
 
 // export const description_embedding = derived<Writable<string>, number[]>(
 // 	description,
