@@ -51,7 +51,7 @@
 		"peerjs": "^1.4.7",
 		"redis": "^4.6.7",
 		"sass": "^1.65.1",
-		"sveltekit-carbon-utils": "^0.2.11",
+		"sveltekit-carbon-utils": "^0.2.14",
 		"uuid": "^9.0.0"
 	}
 }
