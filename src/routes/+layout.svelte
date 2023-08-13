@@ -8,6 +8,9 @@
 <Offline />
 <VercelAnalyticsInject />
 <Layout platformName="vidchat" company="">
+		<svelte:fragment slot="header">
+			<!-- <p>ddfdf</p> -->
+		</svelte:fragment>
 		<svelte:fragment slot="header-utilities">
 			<OfflineHeaderUtility />	
 		</svelte:fragment>

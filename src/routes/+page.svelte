@@ -25,6 +25,7 @@
 		editing = false,
 		searching = false,
 		just_deleted: string,
+		active = false,
 		show_similarity = false,
 		remote_stream_ref: HTMLVideoElement,
 		local_stream_ref: HTMLVideoElement,
@@ -38,7 +39,7 @@
 	$: if (remote_stream_ref && remote_stream) {
 		remote_stream_ref.srcObject = remote_stream;
 		remote_stream.addEventListener('inactive', () => {
-			console.log('remote_stream went inactive, peer id: ', peer.id);
+			console.log('remote_stream went inactive');
 		});
 	}
 	$: if (local_stream_ref && local_stream) local_stream_ref.srcObject = local_stream;
@@ -54,6 +55,7 @@
 			import('peerjs').then(async ({ default: Peer }) => {
 				peer = new Peer();
 				peer.on('open', async (id) => {
+					active = true
 					console.log(`your peerjs id is ${id}`);
 					if ($description)
 						await update(id, $description)
@@ -210,7 +212,7 @@
 	<Column>
 		<div class="controls">
 			<ButtonSet>
-				{#if peer?.id && !$offline}
+				{#if active && !$offline}
 					<Button
 						iconDescription="edit"
 						disabled={editing}
