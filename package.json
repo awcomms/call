@@ -28,7 +28,6 @@
 		"svelte": "^4.2.0",
 		"svelte-check": "^3.5.0",
 		"svelte-preprocess": "^5.0.4",
-		"sveltekit-carbon-utils": "file:../sveltekit-carbon-utils",
 		"tslib": "^2.6.1",
 		"typescript": "^5.1.6",
 		"vite": "^4.4.9"
@@ -52,6 +51,7 @@
 		"peerjs": "^1.4.7",
 		"redis": "^4.6.7",
 		"sass": "^1.65.1",
+		"sveltekit-carbon-utils": "^0.2.15",
 		"uuid": "^9.0.0"
 	}
 }
