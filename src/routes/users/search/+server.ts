@@ -31,7 +31,9 @@ export const GET: RequestHandler = async ({ url }) => {
 		throw error(500);
 	});
 	console.log(results);
-	if (results.total < 2) text(`no_users`);
+	const no_users = text('no_users')
+	if (results.total < 2) return no_users
 	let match = results.documents.filter(d => d.id !== id)[0]
+	if (!match) return no_users
 	return text(match.id.split(PREFIX)[1]);
 };
