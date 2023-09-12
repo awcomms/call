@@ -11,7 +11,7 @@ export const client = createClient({
 });
 
 await client.connect().catch((e) => console.error('redis client.connect', e));
-client.on('error', (e) => console.error('redis client error:', e))
+client.on('error', (e) => console.error('redis client error:', e));
 
 // await client.flushAll()
 
@@ -26,6 +26,22 @@ try {
 				TYPE: 'FLOAT32',
 				DIM: 1536,
 				DISTANCE_METRIC: 'COSINE'
+			},
+			'$.gender': {
+				AS: 'gender',
+				type: SchemaFieldTypes.VECTOR,
+				ALGORITHM: VectorAlgorithms.HNSW,
+				TYPE: 'FLOAT32',
+				DIM: 1536,
+				DISTANCE_METRIC: 'COSINE'
+			},
+			'$.search_gender': {
+				AS: 'search_gender',
+				type: SchemaFieldTypes.VECTOR,
+				ALGORITHM: VectorAlgorithms.HNSW,
+				TYPE: 'FLOAT32',
+				DIM: 1536,
+				DISTANCE_METRIC: 'COSINE'
 			}
 		},
 		{
@@ -34,7 +50,8 @@ try {
 		}
 	);
 } catch (e) {
-	if (e.message !== 'Index already exists') { console.error('client.ft.create', e);  process.exit(1)};
+	if (e.message !== 'Index already exists') {
+		console.error('client.ft.create', e);
+		process.exit(1);
+	}
 }
-
-

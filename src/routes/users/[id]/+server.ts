@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { openai } from '$lib/openai';
 import { client } from '$lib/redis';
 import { error, text } from '@sveltejs/kit';
+import type { Gender } from '$lib/types';
 
 export const DELETE: RequestHandler = async ({ params }) => {
 	return client
@@ -22,23 +23,23 @@ export const DELETE: RequestHandler = async ({ params }) => {
 };
 
 export const PUT: RequestHandler = async ({ params, request }) => {
-	const input = await request.text();
-	console.log('i_set', input);
+	const {gender, search_gender, description}: {gender: Gender, search_gender: Gender, description: string} = await request.json();
 	await client.json
 		.set(PREFIX.concat(params.id), '$', {
-			v: await openai
-				.createEmbedding({ model: embedding_model, input })
-				.then((r) => {
-					return r.data.data[0].embedding;
-				})
-				.catch((e) => {
-					console.error(e);
-					throw error(500);
-				}),
-			input
+			// v: await openai
+			// 	.createEmbedding({ model: embedding_model, input: description })
+			// 	.then((r) => {
+			// 		console.log(r)
+			// 		return r.data.data[0].embedding;
+			// 	})
+			// 	.catch((e) => {
+			// 		console.error(e.toString());
+			// 		throw error(500);
+			// 	}),
+			description, gender, search_gender
 		})
 		.catch((e) => {
-			console.error(e);
+			console.error('PUT users/{id} error: ', e.toString());
 			throw error(500);
 		});
 	return new Response(null, { status: 200 });

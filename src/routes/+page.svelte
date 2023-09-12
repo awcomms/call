@@ -6,7 +6,10 @@
 		Modal,
 		Row,
 		TextArea,
-		InlineLoading
+		InlineLoading,
+		RadioButtonGroup,
+		RadioButton,
+		Toggle
 	} from 'carbon-components-svelte';
 	import Edit from 'carbon-icons-svelte/lib/Edit.svelte';
 	import Search from 'carbon-icons-svelte/lib/Search.svelte';
@@ -14,7 +17,7 @@
 	import axios from 'axios';
 	import type Peer from 'peerjs';
 	import { onDestroy, onMount } from 'svelte';
-	import { description, offline } from '$lib/stores';
+	import { description, gender, offline, search_gender, use_description } from '$lib/stores';
 	import { notify, stringStore } from 'sveltekit-carbon-utils';
 	import Video from '$lib/Video.svelte';
 
@@ -55,7 +58,7 @@
 			import('peerjs').then(async ({ default: Peer }) => {
 				peer = new Peer();
 				peer.on('open', async (id) => {
-					active = true
+					active = true;
 					console.log(`your peerjs id is ${id}`);
 					if ($description)
 						await update(id, $description)
@@ -124,7 +127,7 @@
 				}
 				if (data === 'no_users') {
 					notify({ kind: 'info', title: 'There seem to be currently no users to match with' });
-					return;
+					return await search();
 				}
 				// console.log(data);
 				// if (!data) return await search();
@@ -148,27 +151,27 @@
 						subtitle: e.toString()
 					});
 					console.log(`encountered an error: ${e}`);
+					await search();
 				});
 				return;
 			})
-			.catch((subtitle) => {
-				notify({ kind: 'error', title: 'Search error', subtitle });
+			.catch((e) => {
+				notify({ kind: 'error', title: 'Search error', subtitle: e.toString() });
 			})
 			.finally(() => (searching = false));
 	};
 
 	const update = async (id: string, text: string) => {
-		console.log('update id', id);
-		await axios.put(`/users/${id}`, text);
+		await axios.put(`/users/${id}`, {text, gender: $gender, search_gender: $search_gender});
 	};
 
-	const change_description = async (text: string) => {
+	const update_details = async (text: string) => {
 		editing = true;
 
-		await update(peer.id, text)
-			.then(async () => {
-				// await search();
+		update(peer.id, text)
+			.then(() => {
 				notify('description updated');
+				search();
 			})
 			.catch((e) => {
 				console.log(e);
@@ -189,7 +192,7 @@
 	on:submit={async () => {
 		$description = $old_description;
 		description_open = false;
-		await change_description($description);
+		await update_details($description);
 	}}
 	primaryButtonDisabled={editing}
 	primaryButtonIcon={editing ? InlineLoading : Checkmark}
@@ -199,13 +202,40 @@
 	hasForm
 	modalHeading="edit description"
 >
-	<p>the description will be used to match you to a user with a similar description</p>
-	<TextArea
-		disabled={editing}
-		rows={7}
-		bind:value={$old_description}
-		labelText="description{$description === $old_description ? '' : ' (unsaved)'}"
+	<RadioButtonGroup
+		legendText="I am"
+		on:change={({ detail: gender }) => axios.put(`users/${peer.id}`, { gender })}
+		bind:selected={$gender}
+	>
+		<RadioButton labelText="female" value="2" />
+		<RadioButton labelText="male" value="1" />
+		<RadioButton
+			labelText='would rather not say (matches you with only people searching for "any")'
+			value="0"
+		/>
+	</RadioButtonGroup>
+	<RadioButtonGroup
+		legendText="Search for"
+		on:change={({ detail: search_gender }) => axios.put(`users/${peer.id}`, { search_gender })}
+		bind:selected={$search_gender}
+	>
+		<RadioButton labelText="female" value="2" />
+		<RadioButton labelText="male" value="1" />
+		<RadioButton labelText="any" value="0" />
+	</RadioButtonGroup>
+	<Toggle
+		disabled
+		bind:toggled={$use_description}
+		labelText="Use a description of yourself to be matched with users with similar descriptions"
 	/>
+	{#if $use_description}
+		<TextArea
+			disabled={editing}
+			rows={7}
+			bind:value={$old_description}
+			labelText="description{$description === $old_description ? '' : ' (unsaved)'}"
+		/>
+	{/if}
 </Modal>
 
 <Row>
