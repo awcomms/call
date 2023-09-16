@@ -3,12 +3,13 @@ import type { RequestHandler } from './$types';
 // import { openai } from '$lib/openai';
 import { client } from '$lib/redis';
 import { error } from '@sveltejs/kit';
+import { handle_server_error } from '$lib/handle_server_error';
 
 export const DELETE: RequestHandler = async ({ params }) => {
 	return client
 		.del(PREFIX.concat(params.id))
 		.catch((e) => {
-			console.error(e);
+			handle_server_error('PUT users/{id} error: ', e);
 			throw error(500);
 		})
 		.then((res) => {
@@ -22,13 +23,28 @@ export const DELETE: RequestHandler = async ({ params }) => {
 };
 
 export const PUT: RequestHandler = async ({ params, request }) => {
-	let id = PREFIX.concat(params.id)
+	let id = PREFIX.concat(params.id);
 	const args = await request.json();
-	for (let key of Object.keys(args)) {
-		try { await client.json.set(id, `$.${key}`, args[key]) } catch (e: any) {
-			console.error('PUT users/{id} error: ', e.toString());
-			throw error(500);
+	try {
+		if (!(await client.exists(id))) {
+			try {
+				client.json.set(id, '$', args);
+			} catch (e: any) {
+				handle_server_error('PUT users/{id} error: ', e);
+			}
+		} else {
+			for (let key of Object.keys(args)) {
+				try {
+					await client.json.set(id, `$.${key}`, args[key]);
+				} catch (e: any) {
+					handle_server_error('PUT users/{id} error: ', e);
+					throw error(500);
+				}
+			}
 		}
+	} catch (e: any) {
+		handle_server_error('PUT users/{id} error: ', e);
 	}
+
 	return new Response();
 };

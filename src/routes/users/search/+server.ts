@@ -58,7 +58,7 @@ export const GET: RequestHandler = async ({ url }) => {
 	if (use_position && position) {
 		STEPS.push({ expression: 'exists(@position)' });
 		STEPS.push({ expression: `geodistance(@position,"${position}"`, AS: 'dist' });
-		if (!isNaN(+use_position)) {
+		if (!isNaN(+use_position) && +use_position > 0) {
 			STEPS.push({ expression: `@dist<=${+use_position * 1609.34}` });
 		}
 		STEPS.push({ BY: { BY: '@dist', DIRECTION: 'ASC' } });

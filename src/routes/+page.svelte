@@ -18,7 +18,7 @@
 	import axios from 'axios';
 	import type Peer from 'peerjs';
 	import { onDestroy, onMount } from 'svelte';
-	import { WatchPosition } from '@edge37/svelte-utils';
+	import WatchPosition from '$lib/WatchPosition.svelte';
 	import { description, gender, offline, search_gender, use_description } from '$lib/stores';
 	import { notify, stringStore } from 'sveltekit-carbon-utils';
 	import Video from '$lib/Video.svelte';
@@ -28,9 +28,13 @@
 		remote_stream: MediaStream,
 		target: string,
 		editing = false,
-		searching = false,geolocation_available = false,
+		use_distance = false,
+		searching = false,
+		geolocation_available = false,
 		just_deleted: string,
 		allow = true,
+		use_position = true,
+		distance = 0,
 		show_similarity = false,
 		remote_stream_ref: HTMLVideoElement,
 		local_stream_ref: HTMLVideoElement,
@@ -127,8 +131,16 @@
 		let found = false;
 		while (!found && searching) {
 			try {
+				let params: { id: string; use_position?: number | string } = { id: peer.id };
+				if (use_position) {
+					if (use_distance && distance > 0) {
+						params.use_position = distance;
+					} else {
+						params.use_position = '';
+					}
+				}
 				const { data } = await axios.get('/users/search', {
-					params: { id: peer.id }
+					params
 				});
 				if (!data) {
 					notify({ kind: 'error', title: 'We experienced an error while searching' });
@@ -251,7 +263,7 @@
 		<RadioButton labelText="male" value="1" />
 		<RadioButton labelText="any" value="0" />
 	</RadioButtonGroup>
-	
+
 	<!-- <Toggle
 		bind:toggled={$use_description}
 		labelText="Use a description of yourself to be matched with users with similar descriptions"
