@@ -110,59 +110,63 @@
 
 	const search = async () => {
 		if (searching) {
-			// may_search = false;
 			return;
 		}
-		// console.log('searching');
-		// if (!may_search) return;
 		searching = true;
-		await axios
-			.get('/users/search', {
-				params: { id: peer.id }
-			})
-			.then(async ({ data }) => {
-				if (data === 'no_description') {
+		let found = false;
+		while (!found) {
+			try {
+				const { data } = await axios.get('/users/search', {
+					params: { id: peer.id }
+				});
+				if (!data) {
+					notify({ kind: 'error', title: 'We experienced an error while searching' });
+				} else if (data === 'no_description') {
 					description_open = true;
-					return;
-				}
-				if (data === 'no_users') {
-					notify({ kind: 'info', title: 'There seem to be currently no users to match with' });
-					return await search();
-				}
-				// console.log(data);
-				// if (!data) return await search();
-				target = data;
-				// console.log(`target is ${target}`);
-
-				// console.log(`calling ${target}`);
-				let call = peer.call(target, local_stream);
-				call.on('stream', (s) => {
-					remote_stream = s;
-				});
-				call.on('close', async () => {
-					console.log('remote closed');
-					may_search = true;
-					await search();
-				});
-				call.on('error', async (e) => {
+				} else if (data === 'no_users') {
 					notify({
-						kind: 'error',
-						title: 'Error while tring to connect with found user',
-						subtitle: e.toString()
+						kind: 'info',
+						title: 'There seem to be currently no users to match with',
+						timeout: 1000
 					});
-					console.log(`encountered an error: ${e}`);
-					await search();
-				});
-				return;
-			})
-			.catch((e) => {
-				notify({ kind: 'error', title: 'Search error', subtitle: e.toString() });
-			})
-			.finally(() => (searching = false));
+				} else {
+					target = data;
+					found = true;
+				}
+			} catch (e) {
+				if (e instanceof Error) {
+					notify({ kind: 'error', title: 'Search error', subtitle: e.toString() });
+				} else {
+					notify({ kind: 'error', title: 'Search error', subtitle: 'An unknown error occurred' });
+				}
+			}
+		}
+		handleCall(target);
+	};
+
+	const handleCall = async (target: string) => {
+		let call = peer.call(target, local_stream);
+		call.on('stream', (s) => {
+			remote_stream = s;
+		});
+		call.on('close', async () => {
+			console.log('remote closed');
+			may_search = true;
+			await search();
+		});
+		call.on('error', async (e) => {
+			notify({
+				kind: 'error',
+				title: 'Error while trying to connect with found user',
+				subtitle: e.toString()
+			});
+			console.log(`encountered an error: ${e}`);
+			await search();
+		});
 	};
 
 	const update = async (id: string, text: string) => {
-		await axios.put(`/users/${id}`, {text, gender: $gender, search_gender: $search_gender});
+		await axios.put(`/users/${id}`, { text, gender: $gender, search_gender: $search_gender });
 	};
 
 	const update_details = async (text: string) => {
@@ -210,7 +214,7 @@
 		<RadioButton labelText="female" value="2" />
 		<RadioButton labelText="male" value="1" />
 		<RadioButton
-			labelText='would rather not say (matches you with only people searching for "any")'
+			labelText="would rather not say (matches you with only people searching for 'any')"
 			value="0"
 		/>
 	</RadioButtonGroup>

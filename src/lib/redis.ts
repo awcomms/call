@@ -13,10 +13,10 @@ export const client = createClient({
 await client.connect().catch((e) => console.error('redis client.connect', e));
 client.on('error', (e) => console.error('redis client error:', e));
 
-// await client.flushAll()
+await client.flushAll()
 
-try {
-	await client.ft.create(
+await client.ft
+	.create(
 		index,
 		{
 			'$.v': {
@@ -29,29 +29,38 @@ try {
 			},
 			'$.gender': {
 				AS: 'gender',
-				type: SchemaFieldTypes.VECTOR,
-				ALGORITHM: VectorAlgorithms.HNSW,
-				TYPE: 'FLOAT32',
-				DIM: 1536,
-				DISTANCE_METRIC: 'COSINE'
+				type: SchemaFieldTypes.NUMERIC,
+				NOINDEX: true
 			},
 			'$.search_gender': {
 				AS: 'search_gender',
-				type: SchemaFieldTypes.VECTOR,
-				ALGORITHM: VectorAlgorithms.HNSW,
-				TYPE: 'FLOAT32',
-				DIM: 1536,
-				DISTANCE_METRIC: 'COSINE'
+				type: SchemaFieldTypes.NUMERIC,
+				NOINDEX: true
 			}
 		},
 		{
 			ON: 'JSON',
 			PREFIX
 		}
-	);
-} catch (e) {
-	if (e.message !== 'Index already exists') {
-		console.error('client.ft.create', e);
-		process.exit(1);
-	}
-}
+	)
+	.catch((e) => {
+		if (e.message !== 'Index already exists') {
+			console.error('client.ft.create', e);
+			process.exit(1);
+		}
+	});
+
+await client.ft
+	.alter(index, {
+		'$.created': {
+			AS: 'created',
+			type: SchemaFieldTypes.NUMERIC,
+			NOINDEX: true
+		},
+		'$.updated': {
+			AS: 'updated',
+			type: SchemaFieldTypes.NUMERIC,
+			NOINDEX: true
+		}
+	})
+	.catch((e) => console.error('ft.alter error: ', e));
