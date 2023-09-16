@@ -143,7 +143,7 @@
 					params
 				});
 				if (!data) {
-					notify({ kind: 'error', title: 'We experienced an error while searching' });
+					notify({ kind: 'error', title: 'We experienced an error while searching', timeout: 432 });
 				} else if (data === 'no_description') {
 					description_open = true;
 				} else if (data === 'no_users') {
@@ -201,7 +201,7 @@
 		update(peer.id, text)
 			.then(() => {
 				if (!allow) allow = true;
-				notify('description updated');
+				notify({title: 'description updated', timeout: 1111});
 			})
 			.catch((e) => {
 				console.log(e);
@@ -249,8 +249,9 @@
 	>
 		<RadioButton labelText="female" value="2" />
 		<RadioButton labelText="male" value="1" />
+		<!-- TODO - explain what `rather not say` does -->
 		<RadioButton
-			labelText="would rather not say (matches you with only people searching for 'any')"
+			labelText="rather not say"
 			value="0"
 		/>
 	</RadioButtonGroup>
@@ -268,11 +269,11 @@
 		bind:toggled={$use_description}
 		labelText="Use a description of yourself to be matched with users with similar descriptions"
 	/> -->
-	<Toggle
+	<!-- <Toggle
 		disabled
 		bind:toggled={$use_description}
 		labelText="Use a description of yourself to be matched with users with similar descriptions"
-	/>
+	/> -->
 	{#if $use_description}
 		<TextArea
 			disabled={editing}
