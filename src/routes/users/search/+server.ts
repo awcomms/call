@@ -41,17 +41,17 @@ export const GET: RequestHandler = async ({ url }) => {
 	// if (!v) {
 	// 	text(`no_description`);
 	// }
-	const results = await search(client, {
-		index,
-		// search: v,
-		filters: [
-			{ type: 'text', field: 'gender', value: search_gender },
-			{ type: 'text', field: 'search_gender', value: gender }
-		]
-	}).catch((e) => {
-		console.error(e);
-		throw error(500);
-	});
+	// const results = await search(client, {
+	// 	index,
+	// 	// search: v,
+	// 	filters: [
+	// 		{ type: 'text', field: 'gender', value: search_gender },
+	// 		{ type: 'text', field: 'search_gender', value: gender }
+	// 	]
+	// }).catch((e) => {
+	// 	console.error(e);
+	// 	throw error(500);
+	// });
 	const STEPS: AggregateOptions.STEPS = [
 		{ expression: `@gender==${search_gender} && @search_gender==${gender}` }
 	];
@@ -64,11 +64,16 @@ export const GET: RequestHandler = async ({ url }) => {
 		STEPS.push({ BY: { BY: '@dist', DIRECTION: 'ASC' } });
 	}
 
-	const results = await client.ft.aggregate(index, '*', {
-		STEPS
-	});
-	// console.log(results);
-	let match = results.documents.filter((d) => d.id !== id)[0];
-	if (!match) return text('no_users');
-	return text(match.id.split(PREFIX)[1]);
+	try {
+		const { results } = await client.ft.aggregate(index, '*', {
+			STEPS
+		});
+		console.log(results);
+		return text('');
+	} catch (e: any) {
+		throw error(500);
+	}
+	// let match = results.documents.filter((d) => d.id !== id)[0];
+	// if (!match) return text('no_users');
+	// return text(match.id.split(PREFIX)[1]);
 };
