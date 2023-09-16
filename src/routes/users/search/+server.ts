@@ -5,6 +5,7 @@ import type { V } from '@edge37/redis-utils/dist/types';
 import { client } from '$lib/redis';
 import { PREFIX, index } from '$lib/constants';
 import type { Gender } from '$lib/types';
+import { AggregateOptions } from 'redis';
 
 export const GET: RequestHandler = async ({ url }) => {
 	/**
@@ -12,6 +13,7 @@ export const GET: RequestHandler = async ({ url }) => {
 	 *
 	 */
 	const peer_id = url.searchParams.get('id');
+	const use_position = url.searchParams.get('use_position');
 	if (!peer_id) throw error(400, `No peer id provided`);
 	const id = PREFIX.concat(peer_id);
 	if (
@@ -22,10 +24,15 @@ export const GET: RequestHandler = async ({ url }) => {
 	) {
 		throw error(404, `user with peer_id ${peer_id} not found`);
 	}
-	const { gender, search_gender } = await get<{gender: Gender, search_gender: Gender}>(client, id, [
+	const { gender, search_gender, position } = await get<{
+		gender: Gender;
+		search_gender: Gender;
+		position: string;
+	}>(client, id, [
 		// '$.v',
 		'$.search_gender',
-		'$.gender'
+		'$.gender',
+		'$.position'
 	]).catch((e) => {
 		console.error(e);
 		throw error(500);
@@ -37,12 +44,30 @@ export const GET: RequestHandler = async ({ url }) => {
 	const results = await search(client, {
 		index,
 		// search: v,
-		filters: [{type: 'text', field: 'gender', value: search_gender}, {type: 'text', field: 'search_gender', value: gender}]
+		filters: [
+			{ type: 'text', field: 'gender', value: search_gender },
+			{ type: 'text', field: 'search_gender', value: gender }
+		]
 	}).catch((e) => {
 		console.error(e);
 		throw error(500);
 	});
-	console.log(results);
+	const STEPS: AggregateOptions.STEPS = [
+		{ expression: `@gender==${search_gender} && @search_gender==${gender}` }
+	];
+	if (use_position && position) {
+		STEPS.push({ expression: 'exists(@position)' });
+		STEPS.push({ expression: `geodistance(@position,"${position}"`, AS: 'dist' });
+		if (!isNaN(+use_position)) {
+			STEPS.push({ expression: `@dist<=${+use_position * 1609.34}` });
+		}
+		STEPS.push({ BY: { BY: '@dist', DIRECTION: 'ASC' } });
+	}
+
+	const results = await client.ft.aggregate(index, '*', {
+		STEPS
+	});
+	// console.log(results);
 	let match = results.documents.filter((d) => d.id !== id)[0];
 	if (!match) return text('no_users');
 	return text(match.id.split(PREFIX)[1]);

@@ -18,6 +18,7 @@
 	import axios from 'axios';
 	import type Peer from 'peerjs';
 	import { onDestroy, onMount } from 'svelte';
+	import { WatchPosition } from '@edge37/svelte-utils';
 	import { description, gender, offline, search_gender, use_description } from '$lib/stores';
 	import { notify, stringStore } from 'sveltekit-carbon-utils';
 	import Video from '$lib/Video.svelte';
@@ -27,7 +28,7 @@
 		remote_stream: MediaStream,
 		target: string,
 		editing = false,
-		searching = false,
+		searching = false,geolocation_available = false,
 		just_deleted: string,
 		allow = true,
 		show_similarity = false,
@@ -61,9 +62,9 @@
 					if ($description) {
 						try {
 							await update(id, $description);
-							console.log('update')
+							console.log('update');
 							allow = true;
-							console.log('allow', allow)
+							console.log('allow', allow);
 						} catch (e) {
 							notify({
 								kind: 'error',
@@ -187,7 +188,7 @@
 
 		update(peer.id, text)
 			.then(() => {
-				if (!allow) allow = true
+				if (!allow) allow = true;
 				notify('description updated');
 			})
 			.catch((e) => {
@@ -205,6 +206,15 @@
 <!-- <Modal bind:open={show_similarity} passiveModal modalHeading="Similarity between descriptions">
 	<p>{similarity}</p>
 </Modal> -->
+
+<WatchPosition
+	on:not_available={() => (geolocation_available = false)}
+	on:available={() => (geolocation_available = true)}
+	on:change={({ detail }) =>
+		axios.put(`/users/${peer.id}`, {
+			position: `${detail.position.coords.longitude},${detail.position.coords.latitude}`
+		})}
+/>
 
 <Modal
 	on:submit={async () => {
@@ -241,6 +251,11 @@
 		<RadioButton labelText="male" value="1" />
 		<RadioButton labelText="any" value="0" />
 	</RadioButtonGroup>
+	
+	<!-- <Toggle
+		bind:toggled={$use_description}
+		labelText="Use a description of yourself to be matched with users with similar descriptions"
+	/> -->
 	<Toggle
 		disabled
 		bind:toggled={$use_description}
