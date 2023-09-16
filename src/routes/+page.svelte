@@ -12,6 +12,7 @@
 		Toggle
 	} from 'carbon-components-svelte';
 	import Edit from 'carbon-icons-svelte/lib/Edit.svelte';
+	import Close from 'carbon-icons-svelte/lib/Close.svelte';
 	import Search from 'carbon-icons-svelte/lib/Search.svelte';
 	import Checkmark from 'carbon-icons-svelte/lib/Checkmark.svelte';
 	import axios from 'axios';
@@ -28,7 +29,7 @@
 		editing = false,
 		searching = false,
 		just_deleted: string,
-		active = false,
+		allow = true,
 		show_similarity = false,
 		remote_stream_ref: HTMLVideoElement,
 		local_stream_ref: HTMLVideoElement,
@@ -36,7 +37,6 @@
 		// last_used_description = '',
 		old_description = stringStore('old_description'),
 		similarity = '',
-		may_search = false,
 		peer: Peer;
 
 	$: if (remote_stream_ref && remote_stream) {
@@ -46,7 +46,6 @@
 		});
 	}
 	$: if (local_stream_ref && local_stream) local_stream_ref.srcObject = local_stream;
-	$: may_search = !editing && !searching;
 
 	onDestroy(async () => {
 		if (peer?.id) await del(peer.id);
@@ -58,14 +57,25 @@
 			import('peerjs').then(async ({ default: Peer }) => {
 				peer = new Peer();
 				peer.on('open', async (id) => {
-					active = true;
 					console.log(`your peerjs id is ${id}`);
-					if ($description)
-						await update(id, $description)
-							.then(() => (may_search = true))
-							.catch((e) =>
-								notify({ kind: 'error', title: 'Error while updating description', subtitle: e })
-							);
+					if ($description) {
+						try {
+							await update(id, $description);
+							console.log('update')
+							allow = true;
+							console.log('allow', allow)
+						} catch (e) {
+							notify({
+								kind: 'error',
+								title: 'Error while updating description',
+								subtitle: (() => {
+									return e instanceof Error ? e.toString() : '';
+								})()
+							});
+						}
+					} else {
+						description_open = true;
+					}
 				});
 
 				peer.on('error', async (e) => {
@@ -114,7 +124,7 @@
 		}
 		searching = true;
 		let found = false;
-		while (!found) {
+		while (!found && searching) {
 			try {
 				const { data } = await axios.get('/users/search', {
 					params: { id: peer.id }
@@ -124,24 +134,29 @@
 				} else if (data === 'no_description') {
 					description_open = true;
 				} else if (data === 'no_users') {
-					notify({
-						kind: 'info',
-						title: 'There seem to be currently no users to match with',
-						timeout: 1000
-					});
+					// notify({
+					// 	kind: 'info',
+					// 	title: 'There seem to be currently no users to match with',
+					// 	timeout: 1000
+					// });
 				} else {
 					target = data;
 					found = true;
 				}
 			} catch (e) {
 				if (e instanceof Error) {
-					notify({ kind: 'error', title: 'Search error', subtitle: e.toString() });
+					notify({ kind: 'error', title: 'Search error', subtitle: e.toString(), timeout: 1000 });
 				} else {
-					notify({ kind: 'error', title: 'Search error', subtitle: 'An unknown error occurred' });
+					notify({
+						kind: 'error',
+						title: 'Search error',
+						subtitle: 'An unknown error occurred',
+						timeout: 1000
+					});
 				}
 			}
 		}
-		handleCall(target);
+		if (found && searching) handleCall(target);
 	};
 
 	const handleCall = async (target: string) => {
@@ -149,43 +164,42 @@
 		call.on('stream', (s) => {
 			remote_stream = s;
 		});
-		call.on('close', async () => {
+		call.on('close', () => {
 			console.log('remote closed');
-			may_search = true;
-			await search();
+			search();
 		});
-		call.on('error', async (e) => {
+		call.on('error', (e) => {
 			notify({
 				kind: 'error',
 				title: 'Error while trying to connect with found user',
 				subtitle: e.toString()
 			});
 			console.log(`encountered an error: ${e}`);
-			await search();
+			search();
 		});
 	};
 
-	const update = async (id: string, text: string) => {
-		await axios.put(`/users/${id}`, { text, gender: $gender, search_gender: $search_gender });
-	};
+	const update = (id: string, text: string) =>
+		axios.put(`/users/${id}`, { text, gender: $gender, search_gender: $search_gender });
 
-	const update_details = async (text: string) => {
+	const update_details = (text: string) => {
 		editing = true;
 
 		update(peer.id, text)
 			.then(() => {
+				if (!allow) allow = true
 				notify('description updated');
-				search();
 			})
 			.catch((e) => {
 				console.log(e);
 				notify({ kind: 'error', title: 'Error while updating description', subtitle: e });
 			})
 			.finally(() => {
-				// may_search = true;
 				editing = false;
 			});
 	};
+
+	$: console.log('allow', allow);
 </script>
 
 <!-- <Modal bind:open={show_similarity} passiveModal modalHeading="Similarity between descriptions">
@@ -245,8 +259,8 @@
 <Row>
 	<Column>
 		<div class="controls">
-			<ButtonSet>
-				{#if active && !$offline}
+			{#if allow && !$offline}
+				<ButtonSet>
 					<Button
 						iconDescription="edit"
 						disabled={editing}
@@ -256,14 +270,19 @@
 					<Button
 						iconDescription="search"
 						disabled={editing}
-						icon={searching ? InlineLoading : Search}
-						on:click={search}
-					/>
+						icon={searching ? Close : Search}
+						on:click={() => (searching ? (searching = false) : search())}
+					>
+						{#if searching}
+							<InlineLoading />
+						{/if}
+					</Button>
+
 					<!-- {#if remote_stream && similarity}
 						<Button on:click={() => show_similarity}>user similarity</Button>
 					{/if} -->
-				{/if}
-			</ButtonSet>
+				</ButtonSet>
+			{/if}
 		</div>
 		<div class="videos">
 			<Video remote stream={remote_stream} />
