@@ -13,7 +13,7 @@ export const client = createClient({
 await client.connect().catch((e) => console.error('redis client.connect', e));
 client.on('error', (e) => console.error('redis client error:', e));
 
-await client.flushAll()
+// await client.flushAll()
 
 await client.ft
 	.create(
@@ -50,17 +50,17 @@ await client.ft
 		}
 	});
 
-await client.ft
-	.alter(index, {
-		'$.created': {
-			AS: 'created',
-			type: SchemaFieldTypes.NUMERIC,
-			NOINDEX: true
-		},
-		'$.updated': {
-			AS: 'updated',
-			type: SchemaFieldTypes.NUMERIC,
-			NOINDEX: true
-		}
-	})
-	.catch((e) => console.error('ft.alter error: ', e));
+// await client.ft
+// 	.alter(index, {
+// 		'$.created': {
+// 			AS: 'created',
+// 			type: SchemaFieldTypes.NUMERIC,
+// 			NOINDEX: true
+// 		},
+// 		'$.updated': {
+// 			AS: 'updated',
+// 			type: SchemaFieldTypes.NUMERIC,
+// 			NOINDEX: true
+// 		}
+// 	})
+// 	.catch((e) => console.error('ft.alter error: ', e));

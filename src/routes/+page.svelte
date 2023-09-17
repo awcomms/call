@@ -31,7 +31,7 @@
 		use_distance = false,
 		searching = false,
 		geolocation_available = false,
-		just_deleted: string,
+		// just_deleted: string,
 		allow = true,
 		use_position = true,
 		distance = 0,
@@ -52,44 +52,53 @@
 	}
 	$: if (local_stream_ref && local_stream) local_stream_ref.srcObject = local_stream;
 
-	onDestroy(async () => {
-		if (peer?.id) await del(peer.id);
-	});
+	// onDestroy(async () => {
+		// if (peer?.id) await del(peer.id);
+	// });
 
 	onMount(() => {
 		navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then((stream) => {
 			local_stream = stream;
 			import('peerjs').then(async ({ default: Peer }) => {
-				peer = new Peer();
+				try {
+					peer = new Peer(await axios.get('/peer_id').then((r) => r.data));
+				} catch (e) {
+					console.error('Initialization error: ', e);
+					notify({
+						kind: 'error',
+						title: 'Initialization error occurred'
+					});
+				}
+
 				peer.on('open', async (id) => {
 					console.log(`your peerjs id is ${id}`);
-					if ($description) {
-						try {
-							await update(id, $description);
-							console.log('update');
-							allow = true;
-							console.log('allow', allow);
-						} catch (e) {
-							notify({
-								kind: 'error',
-								title: 'Error while updating description',
-								subtitle: (() => {
-									return e instanceof Error ? e.toString() : '';
-								})()
-							});
-						}
-					} else {
-						description_open = true;
+					// if ($description) {
+					try {
+						await update({ id, gender: Number($gender), search_gender: Number($search_gender) });
+						console.log('update');
+						allow = true;
+						console.log('allow', allow);
+					} catch (e) {
+						notify({
+							kind: 'error',
+							title: 'Error while updating description',
+							subtitle: (() => {
+								return e instanceof Error ? e.toString() : '';
+							})()
+						});
 					}
+					// } else {
+					// 	description_open = true;
+					// }
 				});
 
 				peer.on('error', async (e) => {
 					const error = e.toString();
 					console.error('peer error:', error);
-					if (error.includes(target) && target !== just_deleted) {
-						await del(target).then(() => (just_deleted = target));
+					// if (error.includes(target) && target !== just_deleted) {
+						// await del(target).then(() => (just_deleted = target));
 						await search();
-					}
+					// }
 				});
 
 				peer.on('call', async (c) => {
@@ -115,13 +124,13 @@
 		});
 	});
 
-	const del = (id: string) =>
-		axios
-			.delete(`users/${id}`)
-			.then(() => {
-				console.log(`deleted ${id}`);
-			})
-			.catch((e) => console.error(`failed to delete ${id}. error:`, e));
+	// const del = (id: string) =>
+	// 	axios
+	// 		.delete(`users/${id}`)
+	// 		.then(() => {
+	// 			console.log(`deleted ${id}`);
+	// 		})
+	// 		.catch((e) => console.error(`failed to delete ${id}. error:`, e));
 
 	const search = async () => {
 		if (searching) {
@@ -192,16 +201,23 @@
 		});
 	};
 
-	const update = (id: string, text: string) =>
-		axios.put(`/users/${id}`, { text, gender: $gender, search_gender: $search_gender });
+	interface Update {
+		id: string;
+		text?: string;
+		gender?: number;
+		search_gender?: number;
+	}
 
-	const update_details = (text: string) => {
+	const update = ({ id, text, gender, search_gender }: Update) =>
+		axios.put(`/users/${id}`, { /*text, */ gender, search_gender });
+
+	const update_details = (args: Update) => {
 		editing = true;
 
-		update(peer.id, text)
+		update(args)
 			.then(() => {
 				if (!allow) allow = true;
-				notify({title: 'description updated', timeout: 1111});
+				notify({ title: 'description updated', timeout: 1111 });
 			})
 			.catch((e) => {
 				console.log(e);
@@ -232,7 +248,11 @@
 	on:submit={async () => {
 		$description = $old_description;
 		description_open = false;
-		await update_details($description);
+		await update_details({
+			id: peer.id,
+			gender: Number($gender),
+			search_gender: Number($search_gender)
+		});
 	}}
 	primaryButtonDisabled={editing}
 	primaryButtonIcon={editing ? InlineLoading : Checkmark}
@@ -244,20 +264,18 @@
 >
 	<RadioButtonGroup
 		legendText="I am"
-		on:change={({ detail: gender }) => axios.put(`users/${peer.id}`, { gender })}
+		on:change={({ detail: gender }) => axios.put(`users/${peer.id}`, { gender: Number(gender) })}
 		bind:selected={$gender}
 	>
 		<RadioButton labelText="female" value="2" />
 		<RadioButton labelText="male" value="1" />
 		<!-- TODO - explain what `rather not say` does -->
-		<RadioButton
-			labelText="rather not say"
-			value="0"
-		/>
+		<RadioButton labelText="rather not say" value="0" />
 	</RadioButtonGroup>
 	<RadioButtonGroup
 		legendText="Search for"
-		on:change={({ detail: search_gender }) => axios.put(`users/${peer.id}`, { search_gender })}
+		on:change={({ detail: search_gender }) =>
+			axios.put(`users/${peer.id}`, { search_gender: Number(search_gender) })}
 		bind:selected={$search_gender}
 	>
 		<RadioButton labelText="female" value="2" />

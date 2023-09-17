@@ -53,22 +53,25 @@ export const GET: RequestHandler = async ({ url }) => {
 	// 	throw error(500);
 	// });
 	const STEPS: AggregateOptions.STEPS = [
-		{ expression: `@gender==${search_gender} && @search_gender==${gender}` }
+		// { expression: `@gender==${search_gender} && @search_gender==${gender}` }
 	];
 	if (use_position && position) {
-		STEPS.push({ expression: 'exists(@position)' });
-		STEPS.push({ expression: `geodistance(@position,"${position}"`, AS: 'dist' });
-		if (!isNaN(+use_position) && +use_position > 0) {
-			STEPS.push({ expression: `@dist<=${+use_position * 1609.34}` });
-		}
-		STEPS.push({ BY: { BY: '@dist', DIRECTION: 'ASC' } });
+		// STEPS.push({ expression: 'exists(@position)' });
+		// STEPS.push({ expression: `geodistance(@position,"${position}"`, AS: 'dist' });
+		// if (!isNaN(+use_position) && +use_position > 0) {
+		// 	STEPS.push({ expression: `@dist<=${+use_position * 1609.34}` });
+		// }
+		// STEPS.push({ BY: { BY: '@dist', DIRECTION: 'ASC' } });
 	}
 
 	try {
-		const { results } = await client.ft.aggregate(index, '*', {
-			STEPS
-		});
-		console.log(results);
+		const { results, total } = await client.ft.aggregate(index, '*',
+		// 	{
+		// 	STEPS
+		// }
+		);
+		console.log(results, total);
+		console.log('s', await client.ft.search(index, '*'))
 		return text('');
 	} catch (e: any) {
 		throw error(500);
