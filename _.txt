@@ -1,3 +1,16 @@
+available_tokens realtime update
+
+page.svelte
+    flow
+        if $id
+            checks if id exists
+                false
+                    update_details with $id
+        else
+            requests for new id
+            updates details with new id
+            opens details for editing
+
 on mount, update description ✔
 search
     if searching, return ✔

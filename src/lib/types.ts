@@ -1,6 +1,6 @@
 import type { ObjectId } from "mongodb";
 
-export type Gender = "1" | "2" | "0";
+export type Gender = "1" | "2" | "0" | undefined;
 export interface Call {
     id: string,
     name: string,

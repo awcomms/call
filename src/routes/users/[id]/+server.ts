@@ -2,30 +2,40 @@ import { embedding_model, index, PREFIX } from '$lib/constants';
 import type { RequestHandler } from './$types';
 // import { openai } from '$lib/openai';
 import { client } from '$lib/redis';
-import { error } from '@sveltejs/kit';
+// import { writeFileSync } from 'fs';
+import {float32_buffer} from 'sveltekit-carbon-utils'
 import { handle_server_error } from '$lib/handle_server_error';
+import { openai } from '$lib/openai';
+import { dev } from '$app/environment';
 
-export const DELETE: RequestHandler = async ({ params }) => {
-	return client
-		.del(PREFIX.concat(params.id))
-		.catch((e) => {
-			throw handle_server_error('PUT users/{id} error: ', e);
-		})
-		.then((res) => {
-			console.log(`redis del ${params.id} res`, res);
-			if (res) {
-				return new Response(null, { status: 204 });
-			} else {
-				throw error(404);
-			}
-		});
-};
+// export const DELETE: RequestHandler = async ({ params }) => {
+// 	return client
+// 		.del(PREFIX.concat(params.id))
+// 		.catch((e) => {
+// 			throw handle_server_error('PUT users/{id} error: ', e);
+// 		})
+// 		.then((res) => {
+// 			console.log(`redis del ${params.id} res`, res);
+// 			if (res) {
+// 				return new Response(null, { status: 204 });
+// 			} else {
+// 				throw error(404);
+// 			}
+// 		});
+// };
 
 export const PUT: RequestHandler = async ({ params, request }) => {
-	let id = PREFIX.concat(params.id);
-	const args = await request.json();
-	console.log(args);
 	try {
+		let id = PREFIX.concat(params.id);
+		const args = await request.json();
+		// const text = args.text;
+		// delete args.text;
+		if (args.text && dev) {
+			const v = await openai.createEmbedding({ model: embedding_model, input: args.text });
+			args.v = float32_buffer(v.data.data[0].embedding)
+			// writeFileSync('sample_embedding.json', JSON.stringify(v.data));
+		}
+		// console.log(args);
 		if (!(await client.exists(id))) {
 			client.json.set(id, '$', args);
 		} else {

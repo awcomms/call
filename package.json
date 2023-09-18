@@ -35,25 +35,22 @@
 	"type": "module",
 	"dependencies": {
 		"@carbon/type": "^11.22.0",
+		"@edge37/paystack-utils": "^0.0.5",
 		"@edge37/redis-utils": "^0.0.14",
 		"@edge37/svelte-utils": "^0.0.6",
-		"@pinecone-database/pinecone": "^0.1.6",
 		"@sveltejs/adapter-vercel": "^3.0.3",
 		"@vercel/analytics": "^1.0.2",
 		"@vercel/kv": "^0.2.2",
 		"axios": "^1.4.0",
 		"carbon-components-svelte": "^0.79.0",
 		"carbon-icons-svelte": "^12.1.0",
-		"compute-cosine-similarity": "^1.0.0",
 		"eslint-plugin-svelte": "^2.32.4",
-		"isomorphic-ws": "^5.0.0",
-		"mongodb": "^5.7.0",
+		"gpt-tokenizer": "^2.1.1",
 		"node-sass": "^9.0.0",
 		"openai": "^3.3.0",
 		"peerjs": "^1.4.7",
 		"redis": "^4.6.7",
 		"sass": "^1.65.1",
-		"sveltekit-carbon-utils": "^0.2.15",
 		"uuid": "^9.0.0"
 	}
 }

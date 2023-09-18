@@ -13,7 +13,7 @@ export const client = createClient({
 await client.connect().catch((e) => console.error('redis client.connect', e));
 client.on('error', (e) => console.error('redis client error:', e));
 
-// await client.flushAll()
+await client.flushAll();
 
 await client.ft
 	.create(
@@ -29,6 +29,16 @@ await client.ft
 			},
 			'$.gender': {
 				AS: 'gender',
+				type: SchemaFieldTypes.NUMERIC,
+				NOINDEX: true
+			},
+			'$.created': {
+				AS: 'created',
+				type: SchemaFieldTypes.NUMERIC,
+				NOINDEX: true
+			},
+			'$.updated': {
+				AS: 'updated',
 				type: SchemaFieldTypes.NUMERIC,
 				NOINDEX: true
 			},

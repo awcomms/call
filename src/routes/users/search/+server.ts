@@ -5,7 +5,7 @@ import type { V } from '@edge37/redis-utils/dist/types';
 import { client } from '$lib/redis';
 import { PREFIX, index } from '$lib/constants';
 import type { Gender } from '$lib/types';
-import { AggregateOptions } from 'redis';
+import type { AggregateOptions } from '@redis/search/dist/commands/AGGREGATE';
 
 export const GET: RequestHandler = async ({ url }) => {
 	/**
@@ -52,7 +52,7 @@ export const GET: RequestHandler = async ({ url }) => {
 	// 	console.error(e);
 	// 	throw error(500);
 	// });
-	const STEPS: AggregateOptions.STEPS = [
+	const STEPS: AggregateOptions["STEPS"] = [
 		// { expression: `@gender==${search_gender} && @search_gender==${gender}` }
 	];
 	if (use_position && position) {
@@ -70,8 +70,8 @@ export const GET: RequestHandler = async ({ url }) => {
 		// 	STEPS
 		// }
 		);
-		console.log(results, total);
-		console.log('s', await client.ft.search(index, '*'))
+		console.log('art', results, total);
+		// console.log('s', await client.ft.search(index, '*'))
 		return text('');
 	} catch (e: any) {
 		throw error(500);

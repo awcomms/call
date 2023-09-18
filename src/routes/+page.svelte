@@ -19,11 +19,13 @@
 	import type Peer from 'peerjs';
 	import { onDestroy, onMount } from 'svelte';
 	import WatchPosition from '$lib/WatchPosition.svelte';
-	import { description, gender, offline, search_gender, use_description } from '$lib/stores';
+	import { description, gender, id, offline, search_gender, use_description } from '$lib/stores';
 	import { notify, stringStore } from 'sveltekit-carbon-utils';
 	import Video from '$lib/Video.svelte';
+	import Description from '$lib/Description.svelte';
+	import type { Gender } from '$lib/types';
 
-	let description_open = false,
+	let edit_open = false,
 		local_stream: MediaStream,
 		remote_stream: MediaStream,
 		target: string,
@@ -53,7 +55,7 @@
 	$: if (local_stream_ref && local_stream) local_stream_ref.srcObject = local_stream;
 
 	// onDestroy(async () => {
-		// if (peer?.id) await del(peer.id);
+	// if (peer?.id) await del(peer.id);
 	// });
 
 	onMount(() => {
@@ -61,43 +63,37 @@
 			local_stream = stream;
 			import('peerjs').then(async ({ default: Peer }) => {
 				try {
-					peer = new Peer(await axios.get('/peer_id').then((r) => r.data));
+					if ($id) {
+						if (!(await axios.get(`users/${$id}/exists`).then(({ data }) => data))) {
+							update({ id: $id });
+							edit_open = true;
+						}
+					} else {
+						$id = await axios.get('/peer_id').then((r) => r.data);
+						update({ id: $id });
+						edit_open = true;
+					}
+					peer = new Peer($id, { host: 'https://peerjs-server-gt0g.onrender.com' });
 				} catch (e) {
 					console.error('Initialization error: ', e);
 					notify({
 						kind: 'error',
-						title: 'Initialization error occurred'
+						title: 'Initialization error occurred',
+						subtitle: 'Please reload the page'
 					});
+					allow = false;
 				}
 
 				peer.on('open', async (id) => {
-					console.log(`your peerjs id is ${id}`);
-					// if ($description) {
-					try {
-						await update({ id, gender: Number($gender), search_gender: Number($search_gender) });
-						console.log('update');
-						allow = true;
-						console.log('allow', allow);
-					} catch (e) {
-						notify({
-							kind: 'error',
-							title: 'Error while updating description',
-							subtitle: (() => {
-								return e instanceof Error ? e.toString() : '';
-							})()
-						});
-					}
-					// } else {
-					// 	description_open = true;
-					// }
+					console.log(`your peerjs id: ${id}`);
 				});
 
-				peer.on('error', async (e) => {
+				peer.on('error', (e) => {
 					const error = e.toString();
 					console.error('peer error:', error);
 					// if (error.includes(target) && target !== just_deleted) {
-						// await del(target).then(() => (just_deleted = target));
-						await search();
+					// await del(target).then(() => (just_deleted = target));
+					if (target) search();
 					// }
 				});
 
@@ -133,12 +129,13 @@
 	// 		.catch((e) => console.error(`failed to delete ${id}. error:`, e));
 
 	const search = async () => {
+		if (!allow) return;
 		if (searching) {
 			return;
 		}
 		searching = true;
 		let found = false;
-		while (!found && searching) {
+		while (!found && searching && allow) {
 			try {
 				let params: { id: string; use_position?: number | string } = { id: peer.id };
 				if (use_position) {
@@ -154,7 +151,7 @@
 				if (!data) {
 					notify({ kind: 'error', title: 'We experienced an error while searching', timeout: 432 });
 				} else if (data === 'no_description') {
-					description_open = true;
+					edit_open = true;
 				} else if (data === 'no_users') {
 					// notify({
 					// 	kind: 'info',
@@ -178,7 +175,7 @@
 				}
 			}
 		}
-		if (found && searching) handleCall(target);
+		if (found && searching && allow) handleCall(target);
 	};
 
 	const handleCall = async (target: string) => {
@@ -204,31 +201,34 @@
 	interface Update {
 		id: string;
 		text?: string;
-		gender?: number;
-		search_gender?: number;
+		gender?: Gender;
+		search_gender?: Gender;
 	}
 
-	const update = ({ id, text, gender, search_gender }: Update) =>
-		axios.put(`/users/${id}`, { /*text, */ gender, search_gender });
-
-	const update_details = (args: Update) => {
+	const update = async (
+		arg: Update = {
+			id: $id,
+			text: $description === $old_description ? undefined : $old_description,
+			gender: $gender,
+			search_gender: $search_gender
+		}
+	) => {
 		editing = true;
-
-		update(args)
-			.then(() => {
-				if (!allow) allow = true;
-				notify({ title: 'description updated', timeout: 1111 });
-			})
-			.catch((e) => {
-				console.log(e);
-				notify({ kind: 'error', title: 'Error while updating description', subtitle: e });
-			})
-			.finally(() => {
-				editing = false;
+		try {
+			await axios.put(`/users/${arg.id}`, {
+				text: arg.text,
+				gender: arg.gender,
+				search_gender: arg.search_gender
 			});
+			if (!allow) allow = true;
+			if (arg.text) $description = $old_description;
+			notify({ title: 'Detail updated', timeout: 1111 });
+		} catch (e: any) {
+			console.log('Detail update error', e);
+			notify({ kind: 'error', title: 'Detail update error', subtitle: e, timeout: 1111 });
+		}
+		editing = false;
 	};
-
-	$: console.log('allow', allow);
 </script>
 
 <!-- <Modal bind:open={show_similarity} passiveModal modalHeading="Similarity between descriptions">
@@ -245,26 +245,21 @@
 />
 
 <Modal
-	on:submit={async () => {
-		$description = $old_description;
-		description_open = false;
-		await update_details({
-			id: peer.id,
-			gender: Number($gender),
-			search_gender: Number($search_gender)
-		});
+	on:submit={() => {
+		edit_open = false;
+		update();
 	}}
 	primaryButtonDisabled={editing}
 	primaryButtonIcon={editing ? InlineLoading : Checkmark}
 	primaryButtonText="Save"
-	on:click:button--secondary={() => (description_open = false)}
-	bind:open={description_open}
+	on:click:button--secondary={() => (edit_open = false)}
+	bind:open={edit_open}
 	hasForm
-	modalHeading="edit description"
+	modalHeading="edit"
 >
 	<RadioButtonGroup
 		legendText="I am"
-		on:change={({ detail: gender }) => axios.put(`users/${peer.id}`, { gender: Number(gender) })}
+		on:change={({ detail: gender }) => update({ id: $id, gender: gender })}
 		bind:selected={$gender}
 	>
 		<RadioButton labelText="female" value="2" />
@@ -274,8 +269,7 @@
 	</RadioButtonGroup>
 	<RadioButtonGroup
 		legendText="Search for"
-		on:change={({ detail: search_gender }) =>
-			axios.put(`users/${peer.id}`, { search_gender: Number(search_gender) })}
+		on:change={({ detail: search_gender }) => update({ id: $id, search_gender: search_gender })}
 		bind:selected={$search_gender}
 	>
 		<RadioButton labelText="female" value="2" />
@@ -288,16 +282,14 @@
 		labelText="Use a description of yourself to be matched with users with similar descriptions"
 	/> -->
 	<!-- <Toggle
-		disabled
 		bind:toggled={$use_description}
 		labelText="Use a description of yourself to be matched with users with similar descriptions"
 	/> -->
 	{#if $use_description}
-		<TextArea
+		<Description
 			disabled={editing}
-			rows={7}
 			bind:value={$old_description}
-			labelText="description{$description === $old_description ? '' : ' (unsaved)'}"
+			labelText="Description{$description === $old_description ? '' : ' (unsaved)'}"
 		/>
 	{/if}
 </Modal>
@@ -311,7 +303,7 @@
 						iconDescription="edit"
 						disabled={editing}
 						icon={editing ? InlineLoading : Edit}
-						on:click={() => (description_open = true)}
+						on:click={() => (edit_open = true)}
 					/>
 					<Button
 						iconDescription="search"
