@@ -9,7 +9,8 @@
 		InlineLoading,
 		RadioButtonGroup,
 		RadioButton,
-		Toggle
+		Toggle,
+		NumberInput
 	} from 'carbon-components-svelte';
 	import Edit from 'carbon-icons-svelte/lib/Edit.svelte';
 	import Close from 'carbon-icons-svelte/lib/Close.svelte';
@@ -19,7 +20,7 @@
 	import type Peer from 'peerjs';
 	import { onDestroy, onMount } from 'svelte';
 	import WatchPosition from '$lib/WatchPosition.svelte';
-	import { description, gender, id, offline, search_gender, use_description } from '$lib/stores';
+	import { description, gender, id, offline, search_gender } from '$lib/stores';
 	import { notify, stringStore } from 'sveltekit-carbon-utils';
 	import Video from '$lib/Video.svelte';
 	import Description from '$lib/Description.svelte';
@@ -30,20 +31,17 @@
 		remote_stream: MediaStream,
 		target: string,
 		editing = false,
-		use_distance = false,
+		use_distance = true,
 		searching = false,
 		geolocation_available = false,
 		// just_deleted: string,
 		allow = true,
-		use_position = true,
+		use_position = false,
 		distance = 0,
-		show_similarity = false,
 		remote_stream_ref: HTMLVideoElement,
 		local_stream_ref: HTMLVideoElement,
-		similarity_error = false,
 		// last_used_description = '',
 		old_description = stringStore('old_description'),
-		similarity = '',
 		peer: Peer;
 
 	$: if (remote_stream_ref && remote_stream) {
@@ -108,13 +106,6 @@
 						remote_stream = s;
 					});
 					// last_used_description = $description;
-					// await axios
-					// 	.post(`/users/${peer.id}/similarity`, $description)
-					// 	.then((r) => {
-					// 		similarity = r.data;
-					// 		console.log('similarity', similarity);
-					// 	})
-					// 	.catch(() => (similarity_error = true));
 				});
 			});
 		});
@@ -231,10 +222,6 @@
 	};
 </script>
 
-<!-- <Modal bind:open={show_similarity} passiveModal modalHeading="Similarity between descriptions">
-	<p>{similarity}</p>
-</Modal> -->
-
 <WatchPosition
 	on:not_available={() => (geolocation_available = false)}
 	on:available={() => (geolocation_available = true)}
@@ -257,41 +244,41 @@
 	hasForm
 	modalHeading="edit"
 >
-	<RadioButtonGroup
-		legendText="I am"
-		on:change={({ detail: gender }) => update({ id: $id, gender: gender })}
-		bind:selected={$gender}
-	>
-		<RadioButton labelText="female" value="2" />
-		<RadioButton labelText="male" value="1" />
-		<!-- TODO - explain what `rather not say` does -->
-		<RadioButton labelText="rather not say" value="0" />
-	</RadioButtonGroup>
-	<RadioButtonGroup
-		legendText="Search for"
-		on:change={({ detail: search_gender }) => update({ id: $id, search_gender: search_gender })}
-		bind:selected={$search_gender}
-	>
-		<RadioButton labelText="female" value="2" />
-		<RadioButton labelText="male" value="1" />
-		<RadioButton labelText="any" value="0" />
-	</RadioButtonGroup>
-
-	<!-- <Toggle
-		bind:toggled={$use_description}
-		labelText="Use a description of yourself to be matched with users with similar descriptions"
-	/> -->
-	<!-- <Toggle
-		bind:toggled={$use_description}
-		labelText="Use a description of yourself to be matched with users with similar descriptions"
-	/> -->
-	{#if $use_description}
-		<Description
-			disabled={editing}
-			bind:value={$old_description}
-			labelText="Description{$description === $old_description ? '' : ' (unsaved)'}"
-		/>
-	{/if}
+	<div class="modal">
+		<RadioButtonGroup
+			legendText="I am"
+			on:change={({ detail: gender }) => update({ id: $id, gender: gender })}
+			bind:selected={$gender}
+		>
+			<RadioButton labelText="female" value="2" />
+			<RadioButton labelText="male" value="1" />
+			<!-- TODO - explain what `rather not say` does -->
+			<RadioButton labelText="rather not say" value="0" />
+		</RadioButtonGroup>
+		<RadioButtonGroup
+			legendText="Search for"
+			on:change={({ detail: search_gender }) => update({ id: $id, search_gender: search_gender })}
+			bind:selected={$search_gender}
+		>
+			<RadioButton labelText="female" value="2" />
+			<RadioButton labelText="male" value="1" />
+			<RadioButton labelText="any" value="0" />
+		</RadioButtonGroup>
+		<Toggle bind:toggled={use_position} labelText="Nearby" />
+		{#if use_position}
+			<Toggle bind:toggled={use_distance} labelText="Within" />
+			{#if use_distance}
+				<NumberInput bind:value={distance} label="Within {distance} miles" />
+			{/if}
+		{/if}
+		{#if !(use_position && !distance)}
+			<Description
+				disabled={editing}
+				bind:value={$old_description}
+				labelText="Description{$description === $old_description ? '' : ' (unsaved)'}"
+			/>
+		{/if}
+	</div>
 </Modal>
 
 <Row>
@@ -315,10 +302,6 @@
 							<InlineLoading />
 						{/if}
 					</Button>
-
-					<!-- {#if remote_stream && similarity}
-						<Button on:click={() => show_similarity}>user similarity</Button>
-					{/if} -->
 				</ButtonSet>
 			{/if}
 		</div>
@@ -330,6 +313,11 @@
 </Row>
 
 <style lang="sass">
+	@use '@carbon/layout'
+	.modal
+		display: flex
+		flex-direction: column
+		row-gap: layout.$spacing-07
 	.controls
 		display: flex
 		min-height: 3rem

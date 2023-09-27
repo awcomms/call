@@ -1,6 +1,4 @@
 import { OPENAI } from "$env/static/private";
-import { Configuration, OpenAIApi } from "openai";
+import { OpenAI } from "openai";
 
-export const configuration = new Configuration({apiKey: OPENAI})
-
-export const openai = new OpenAIApi(configuration)
+export const openai = new OpenAI({apiKey: OPENAI})
