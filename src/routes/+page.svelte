@@ -5,7 +5,6 @@
 		Column,
 		Modal,
 		Row,
-		TextArea,
 		InlineLoading,
 		RadioButtonGroup,
 		RadioButton,
@@ -18,21 +17,25 @@
 	import Checkmark from 'carbon-icons-svelte/lib/Checkmark.svelte';
 	import axios from 'axios';
 	import type Peer from 'peerjs';
-	import { onDestroy, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 	import WatchPosition from '$lib/WatchPosition.svelte';
 	import { description, gender, id, offline, search_gender } from '$lib/stores';
 	import { notify, stringStore } from 'sveltekit-carbon-utils';
-	import Video from '$lib/Video.svelte';
+	import Feed from '$lib/Feed.svelte';
 	import Description from '$lib/Description.svelte';
 	import type { Gender } from '$lib/types';
+	import Chat from '$lib/Chat.svelte';
+	import type { DataConnection } from 'peerjs';
 
 	let edit_open = false,
 		local_stream: MediaStream,
 		remote_stream: MediaStream,
 		target: string,
+		chat_open = false,
 		editing = false,
 		use_distance = true,
 		searching = false,
+		data_connection: DataConnection,
 		geolocation_available = false,
 		// just_deleted: string,
 		allow = true,
@@ -76,24 +79,31 @@
 					console.error('Initialization error: ', e);
 					notify({
 						kind: 'error',
-						title: 'Initialization error occurred',
-						subtitle: 'Please reload the page'
+						title: 'Please reload the page'
 					});
 					allow = false;
 				}
 
-				peer.on('open', async (id) => {
-					console.log(`your peerjs id: ${id}`);
-				});
-
-				peer.on('error', (e) => {
+				peer.on('error', async (e) => {
 					const error = e.toString();
 					console.error('peer error:', error);
+					if (/ID\s".+"\sis\sinvalid/.test(error)) {
+						try {
+							$id = await axios.get('/peer_id').then((r) => r.data);
+							update({ id: $id });
+							peer = new Peer($id, { host: 'https://peerjs-server-gt0g.onrender.com' });
+							edit_open = true;
+						} catch (e) {
+							notify({ kind: 'error', title: 'Please reload this page' });
+						}
+					}
+
 					// if (error.includes(target) && target !== just_deleted) {
 					// await del(target).then(() => (just_deleted = target));
-					if (target) search();
 					// }
 				});
+
+				peer.on('connection', (c) => (data_connection = c));
 
 				peer.on('call', async (c) => {
 					if (target && c.peer !== target) {
@@ -101,11 +111,14 @@
 						return; //TODO - do we need to return after closing call?
 					}
 					c.answer(stream);
+					data_connection = peer.connect(c.peer);
+					// data_connection.on('data', (t) => {
+					// 	messages = [...messages, { s: data_connection.peer, t: t as string }];
+					// 	// chat.scroll
+					// });
 					c.on('stream', (s) => {
-						// console.log('received stream');
 						remote_stream = s;
 					});
-					// last_used_description = $description;
 				});
 			});
 		});
@@ -154,6 +167,8 @@
 					found = true;
 				}
 			} catch (e) {
+				allow = false;
+				console.error('search error', e);
 				if (e instanceof Error) {
 					notify({ kind: 'error', title: 'Search error', subtitle: e.toString(), timeout: 1000 });
 				} else {
@@ -176,7 +191,6 @@
 		});
 		call.on('close', () => {
 			console.log('remote closed');
-			search();
 		});
 		call.on('error', (e) => {
 			notify({
@@ -185,7 +199,6 @@
 				subtitle: e.toString()
 			});
 			console.log(`encountered an error: ${e}`);
-			search();
 		});
 	};
 
@@ -306,8 +319,8 @@
 			{/if}
 		</div>
 		<div class="videos">
-			<Video remote stream={remote_stream} />
-			<Video stream={local_stream} />
+			<Feed {data_connection} remote stream={remote_stream} />
+			<Feed {data_connection} remote={false} stream={local_stream} />
 		</div>
 	</Column>
 </Row>

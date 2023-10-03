@@ -38,6 +38,7 @@
 		"@edge37/paystack-utils": "^0.0.6",
 		"@edge37/redis-utils": "^2.0.0",
 		"@edge37/svelte-utils": "^0.0.7",
+		"@solana/web3.js": "^1.78.5",
 		"@sveltejs/adapter-vercel": "^3.0.3",
 		"@vercel/analytics": "^1.0.2",
 		"@vercel/kv": "^0.2.3",

@@ -13,6 +13,7 @@ const resolove_gender = (v: string): Gender => {
 export const peer = writable<Peer>(undefined);
 export const description = stringStore('description', '');
 export const offline = writable(false);
+export const chat_open = booleanStore('chat_open')
 export const id = stringStore('id', '')
 export const gender = typeStore<Gender>('gender', undefined, resolove_gender)
 export const search_gender = typeStore<Gender>('search_gender', undefined, resolove_gender)

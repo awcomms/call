@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
@@ -8,6 +8,15 @@
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-prefetch>
-		%sveltekit.body%
+		<div class="sveltekit-body">%sveltekit.body%</div>
 	</body>
 </html>
+
+<style>
+	.sveltekit-body {
+		display: contents;
+	}
+	.hide {
+		display: none;
+	}
+</style>

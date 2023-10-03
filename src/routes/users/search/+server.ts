@@ -12,8 +12,8 @@ import type { SearchParams } from '@edge37/redis-utils/dist/redis/search';
 export const GET: RequestHandler = async ({ url, request }) => {
 	try {
 		const peer_id = url.searchParams.get('id');
-		const use_position = url.searchParams.get('use_position');
 		if (!peer_id) throw { s: 400, m: `No peer id provided` };
+		const use_position = url.searchParams.get('use_position');
 		const id = PREFIX.concat(peer_id);
 		if (
 			!(await client.exists(id).catch((e) => {
@@ -80,6 +80,6 @@ export const GET: RequestHandler = async ({ url, request }) => {
 		if (!match) return text('no_users');
 		return text(match.id);
 	} catch (e) {
-		handle_server_error(request, e);
+		throw handle_server_error(request, e);
 	}
 };

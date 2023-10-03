@@ -3,4 +3,4 @@ export const embedding_model = 'text-embedding-ada-002';
 export const embedding_field = 'v';
 export { default as empty_string_embedding } from './empty_string_embedding';
 export const index = 'v';
-export const PREFIX = `__${index}_`;
+export const PREFIX = `call_${index}_`;

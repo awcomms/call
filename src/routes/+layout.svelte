@@ -1,8 +1,13 @@
 <script>
 	import Offline from '$lib/Offline.svelte';
 	import OfflineHeaderUtility from '$lib/OfflineHeaderUtility.svelte';
+	import { onMount } from 'svelte';
 
 	import { Layout, VercelAnalyticsInject } from 'sveltekit-carbon-utils';
+
+	onMount(() => {
+		localStorage.clear()
+	})
 </script>
 
 <Offline />
