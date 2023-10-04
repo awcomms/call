@@ -24,7 +24,6 @@
 	import Feed from '$lib/Feed.svelte';
 	import Description from '$lib/Description.svelte';
 	import type { Gender } from '$lib/types';
-	import Chat from '$lib/Chat.svelte';
 	import type { DataConnection } from 'peerjs';
 
 	let edit_open = false,
@@ -65,15 +64,19 @@
 			import('peerjs').then(async ({ default: Peer }) => {
 				try {
 					if ($id) {
-						if (!(await axios.get(`users/${$id}/exists`).then(({ data }) => data))) {
+						const { data } = await axios.get(`users/${$id}/exists`);
+						if (!data) {
+							console.log('!data')
 							update({ id: $id });
 							edit_open = true;
 						}
 					} else {
+						console.log('!id')
 						$id = await axios.get('/peer_id').then((r) => r.data);
 						update({ id: $id });
 						edit_open = true;
 					}
+					console.log('t id', $id)
 					peer = new Peer($id, { host: 'https://peerjs-server-gt0g.onrender.com' });
 				} catch (e) {
 					console.error('Initialization error: ', e);
