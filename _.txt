@@ -1,3 +1,19 @@
+r
+    login
+        header
+        routes
+            ?
+        checks
+            ?
+    create
+        modal
+            text area
+        add to db
+            index: r, prefix: r_
+    search
+        modal
+            text input
+
 chat sender label
 chat disappears
 why feed not show

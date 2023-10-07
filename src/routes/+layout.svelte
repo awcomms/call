@@ -16,7 +16,7 @@
 		<svelte:fragment slot="header">
 		</svelte:fragment>
 		<svelte:fragment slot="header-utilities">
-			<OfflineHeaderUtility />	
+			<OfflineHeaderUtility />
 		</svelte:fragment>
 	<svelte:fragment slot="content-grid">
 		<slot />

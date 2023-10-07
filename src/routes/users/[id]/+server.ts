@@ -7,6 +7,7 @@ import { float32_buffer } from 'sveltekit-carbon-utils';
 import { handle_server_error } from '$lib/handle_server_error';
 import { openai } from '$lib/openai';
 import { dev } from '$app/environment';
+import { remote } from '$lib/util/embedding/remote';
 
 // export const DELETE: RequestHandler = async ({ params }) => {
 // 	return client
@@ -29,8 +30,7 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 		let id = PREFIX.concat(params.id);
 		const args = await request.json();
 		if (args.text) {
-			const v = await openai.createEmbedding({ model: embedding_model, input: args.text });
-			args.v = float32_buffer(v.data.data[0].embedding);
+			args.v = await remote(args.text)
 			// writeFileSync('sample_embedding.json', JSON.stringify(v.data));
 		}
 		if (!(await client.exists(id))) {

@@ -73,6 +73,7 @@
 					} else {
 						console.log('!id')
 						$id = await axios.get('/peer_id').then((r) => r.data);
+						console.log('now', $id)
 						update({ id: $id });
 						edit_open = true;
 					}
@@ -144,7 +145,7 @@
 		let found = false;
 		while (!found && searching && allow) {
 			try {
-				let params: { id: string; use_position?: number | string } = { id: peer.id };
+				let params: { id: string; use_position?: number | string } = { id: $id };
 				if (use_position) {
 					if (use_distance && distance > 0) {
 						params.use_position = distance;

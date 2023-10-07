@@ -12,7 +12,6 @@
 	let audio: MediaStreamTrack, video: MediaStreamTrack, messages: Message[], chat: HTMLDivElement;
 
 	const stream_update = (stream: MediaStream) => {
-		console.log('s');
 		if (!stream) return;
 		if (ref) ref.srcObject = stream;
 		audio = stream.getAudioTracks()[0];

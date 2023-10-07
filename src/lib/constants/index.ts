@@ -1,6 +1,10 @@
 export const items_per_page = 2;
 export const embedding_model = 'text-embedding-ada-002';
 export const embedding_field = 'v';
+export const embed_endpoint = 'http://18.215.251.72:80';
 export { default as empty_string_embedding } from './empty_string_embedding';
+export const user_id_prefix = 'user_';
 export const index = 'v';
 export const PREFIX = `call_${index}_`;
+export const protected_routes = ['/add', '/settings', '/edit'];
+export const user_index = 'users';

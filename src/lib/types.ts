@@ -22,3 +22,10 @@ export interface Message {
 	r?: string;
 	t: string;
 }
+
+export class EscapedEmail {
+	value: string;
+	constructor(email: string) {
+		this.value = escape_email(email);
+	}
+}
